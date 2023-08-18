@@ -1,0 +1,109 @@
+D3 is a js library for displaying data. It is hella complex and customizable.
+
+These notes are specifically how to use it with react. 
+
+
+------------------ Virtual DOM & why react and d3 dont play nice ---------------
+
+First, Virtual DOM talk: DOM is a tree-like object representation of the webpage. the browser paints the DOM on the 
+page. When DOM elements are updated, the browser must parse the HTML, remove the changed element, then replaces it 
+with the new element, then updates layout and CSS. React uses a virtual DOM composed of two DOMs, 
+it keeps a copy of the current DOM and creates an updated DOM. It then compares the two and takes note of what exactly changes.
+After this it then updates the real with only the changes. It also does updates in batched. Its faster this way.
+
+React and D3 have issues with each other because React uses a virtual DOM and D3 uses jquery to 
+modify the real DOM. React will change the state of a component, and the state will cause the component to rerender.
+But when D3 modifies the real DOM, React has no way of knowing that the real DOM has changed. Thus it's two copies of the virtual DOM become out of sync.
+This can cause many bugs when react tries to updated the real DOM based on the difference between it's two virtual DOMs.
+
+There are many solutions to this problem, in these notes we will be using a solution called: 
+
+Lifecycle Methods Wrapping 
+
+This solution involves creating our D3 code in a separate file, then creating a React wrapper component to contain it. 
+Once we have it created, we will attach it, update it, and remove it using the react lifecycle methods.
+
+here is a good blog: https://2019.wattenberger.com/blog/react-and-d3
+
+----------------- Installing D3 ---------------------
+
+-- create a react app, then in the folder enter:
+
+npm i d3 
+
+------------------ Notes on useRef hook ---------------------
+
+-- D3 methods must be enacted on an HTML element. So for us to work with it in React, we will have to have some way to reference HTML elements in react. 
+Enter the useRef hook.
+
+import { useRef } from 'react'; 
+
+-- useRef is used to create a reference to something. It can be a number, variable, or an html element. Its literally just a pointer to something. 
+-- We can update our pointer to point to something and the component will not change. 
+-- references are accessed by [variablename].current
+
+-- It is most often used to reference an HTML element and is set upon initial render:
+
+const h1Element = useRef(null)                        // 1. initialize to null
+
+useEffect(() => {
+    h1Element.current.innerText = "New home page"     // 3. the element is then accessed via h1Element.current       
+},[])
+
+return (
+    <h1 ref={h1Element}> Home page </h1>               // 2. when the component renders, h1Element.current will point to this HTML element. 
+)
+
+Note: that useEffect occurs AFTER react renders the JSX (the stuff in the return).
+
+------------------ Creating the wrapper for our D3 class ------------------
+
+We will be creating a D3 class in a separete JS file. Then exporting that class. The class will take in an HTML element that we pass it.
+The element will be enacted on by D3 to attach our D3 visuals. W
+
+
+1) create a separate javascript file called D3Chart.js
+
+    1a) import all methods from d3 into a d3 object at the top of your code: 
+
+        import * as d3 from 'd3'; 
+
+    1b) create/export a class called D3Chart. 
+
+        class D3Chart{
+            constructor(element){
+                const svg = d3.select(element)        // in here we will enact our D3 functionality on the element passed to us. 
+                        .append('svg')
+                          .attr('width', 500)
+                          .attr('height', 500);
+                        
+                svg.append('circle')
+                     .attr('r', 40)
+                     .attr('cy', 100)
+                     .attr('cx', 100)
+                     .attr('fill', 'red');
+            }
+        }
+
+2) create a new react component called ChartWrapper and pop that guy into App.jsx like we do with any other React component.
+
+    2a) create a reference to an element in the component with useRef, then on initial render, instantiate a new D3Chart() object and pass in the reference to the HTML element:
+
+    function ChartWrapper() {
+        const chart = useRef(null);
+
+        useEffect(() => {
+            new D3Chart(chart.current);               // create instance of D3Chart and pass in the referenced element 
+        }, []);
+
+        return (
+            <>
+            <h1>ChartWrapper</h1>
+            <div ref={chart}></div>                   // create reference to the element that will hold our D3Chart
+            </>
+        );
+    }
+
+------------------ D3 ------------------
+Good blog post on data(), enter(), update(), and exit()
+https://bost.ocks.org/mike/join/
