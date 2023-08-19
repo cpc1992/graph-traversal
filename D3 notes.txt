@@ -107,3 +107,47 @@ The element will be enacted on by D3 to attach our D3 visuals. W
 ------------------ D3 ------------------
 Good blog post on data(), enter(), update(), and exit()
 https://bost.ocks.org/mike/join/
+
+import * as d3 from 'd3'
+
+-- we will use the d3 object's methods to select an element, and bind data to it, then append SVG elements 
+to those bound data points. This allows us to customize the SVG element and do animations on the elements 
+depending on the data bound to it. 
+
+-- When we bind data to an element, d3 will compare the data to the data already bound to the element. It allows us to manipulate
+any new data that we are binding, matching data that is already there, and old data that is not in the new updated bound data. 
+
+data = [1,2,3,4,5,6]              // sample data
+
+let svg = d3.select(element)      // this will find an element on the DOM and return it.   
+    .append('svg')                // then we will append an svg element to it. => returns the appended element
+      .attr('width', 1000)        // these are setting attributes of the svg element => return the element with the updated attribute
+      .attr('height', 1000);
+
+let selection = svg.selectAll('rect') // 1. now we are searching for all existing <rect> elements within the SVG element => returns a d3 selection. 
+                                     // If you ran this previously, there may be some previously data-bound rect elements, THATs the point. on first run this will return an empty selection
+   .data(data);                      // 2. This takes in an ARRAY of data and BINDS it to the selection. this returns a 3 part selection. enter, update, and exit. this line specifically returns the update section
+                                     // you can access the enter section by putting a .enter() same with exit(). 
+                                     // enter represents the set of data that is new from the data you binded. 
+                                     // update represent the set of data that you binded that already existed in the selection. 
+                                     // exit represents the set of data that was already in the selection, but is not in the set of data you binded. 
+                                     // its a venn diagram. you can alter each set of data seperately. => this returns the update() selection (bounded data that was already there that matches data you just binded)
+    
+selection.enter()                    // 3. we are now going to access the set of data that we binded that is all new. aka was not previously bound to the selection from line 1. => returns a selection 
+   .append('rect')                   // 4. we are appending a rect svg element to each of the elements in the enter() selection. 
+                                     // This will make rectangles appear on the screen representing all new data. => returns a selection of the newly added rect elements
+     .attr('width', 50)              // 5. this will make all the of rect elements width 50 
+     .attr('height', (d, i) => d)    // 6. this will dynamically set the height of each rect element based on the DATA POINT THAT IT IS BOUND TO. The second parameter can be a function, where 
+                                     // the first parameter of the function is the data point that it is bound to. the second parameter is the data points index in the data array.
+     .attr('x', (d, i) => 100 * i )  // 7. this will dynamically set the x coordinate offset of the svg element. aka it moves it right. every element will be 100 px to the right of the previous. 
+     .attr('y', 20)                  // 8. this sets the y coordinate to 20 for all rect elements. 
+     .attr('fill', 'green')          // set the color to green 
+
+selection.exit()                     // 9. this is accessing the data exit selection aka the data that existed previously, but does not exist in the newly bound data. => returns a selection of already existing bound data 
+   .remove()                         // 10. this will remove all of the old data from the svg. 
+
+selection.update()                   // 11. this will access the data that already existed in the original selection THAT matches the data we bound to the selection. => returns a selection of elements that are already bound.
+   .attr('fill', 'red')              // 12. this sets the color of the already existing elements to red.
+
+-- essentially what we did was append a new set of data. all matching data that matches the newly bounds data turns red. any NEW data appears on the screen in green. and any already existing data that
+does not match any point in the new data gets removed. 
