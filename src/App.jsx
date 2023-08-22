@@ -1,5 +1,4 @@
 import { useState } from "react";
-import "./App.css";
 import ChartWrapper from "./ChartWrapper.jsx";
 
 function App() {

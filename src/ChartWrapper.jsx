@@ -2,19 +2,13 @@ import { useState, useRef, useEffect } from "react";
 import D3Chart from "./D3Chart.js";
 
 function ChartWrapper() {
-  const chart = useRef(null);
-  const counter = useRef(0);
+  const wrapper = useRef(null);
 
   useEffect(() => {
-    new D3Chart(chart.current);
+    let d3chart = new D3Chart(wrapper.current);
   }, []);
 
-  return (
-    <>
-      <h1>ChartWrapper</h1>
-      <div ref={chart}></div>
-    </>
-  );
+  return <div ref={wrapper}></div>;
 }
 
 export default ChartWrapper;

@@ -55,6 +55,10 @@ return (
 )
 
 Note: that useEffect occurs AFTER react renders the JSX (the stuff in the return).
+The order in which these line occurs are:
+1) Ref const h1Element is create and points to null
+2) the return is called and the h1 is appended to the DOM. after being appended, ref constant h1Element points to it. 
+3) the useEffect is called, and changes the inner text of the h1
 
 ------------------ Creating the wrapper for our D3 class ------------------
 
@@ -104,7 +108,7 @@ The element will be enacted on by D3 to attach our D3 visuals. W
         );
     }
 
------------------- D3 ------------------
+------------------ D3 data joining------------------
 Good blog post on data(), enter(), update(), and exit()
 https://bost.ocks.org/mike/join/
 
@@ -151,3 +155,109 @@ selection.update()                   // 11. this will access the data that alrea
 
 -- essentially what we did was append a new set of data. all matching data that matches the newly bounds data turns red. any NEW data appears on the screen in green. and any already existing data that
 does not match any point in the new data gets removed. 
+
+------------------ D3 scales ------------------
+
+-------- linear scale -- d3.scaleLinear(): this acts as a function (like y=mx+b) which takes in an input domain and converts it to an output range. 
+To create the function we supply two things: 
+1) a tuple array for the input domain
+2) a tuple array for the output range. 
+The linearScale() method will return a function that can take any number within the input domain and return to number scaled to the output domain. This is useful if we want to display a bar chart of people's 
+heights, and we want to scale each bar to the max height of the bar chart. 
+
+example: 
+const y = d3.scaleLinear()
+            .domain([0,300])        // the max range of heights that we will input to our chart if 282 cm.
+            .range([0,500])         // but we want to scale the chart to 500 px.
+
+console.log(y(150))                 // this will print 250. because 150 is half of 300 and scaled to 500 is 250. 
+
+-- y acts as a formula or function that takes an input number (that is within the domain we set) and output thats number SCALED to the range that we provided. 
+When we create our bar chart later, we use this to set the height of our bars when we append them to the page. 
+
+const selection = d3.select(element)
+              .append(svg)
+              .attr('height', 500)                  // the height of the entire SVG is only 500 
+              .attr('width', 500)
+              .data(data)
+
+selection.selectAll('rects')
+         .enter()
+         .append('rects')
+         .attr('height', point => y(point.height))   // this way the bars are SCALED to the size of the SVG. if an input height comes in at 300 it will fill the entire height of the SVG. 
+         .attr('width', 50)
+
+-------- band scale -- d3.scaleBand(): this is a function that maps in input array of values to an output range. It returns a function that can take an input value (that must be in the input domain) and returns 
+a number on in the output range scale. the output represents the start of the band that represents the value in the output range.
+
+const x = d3.scaleBand()
+            .domain(['a','b','c'])         // it basically takes the range 0 - 1000 and chops it into 3 bands (because there are 3 inputs). the first band is 'a', the second is 'b'...
+            .range([0,1000])  
+
+console.log(x('a'))                         // 0  
+console.log(x('b'))                         // 333     it returns where the band for that input value starts on the range.
+console.log(x('c'))                         // 666
+console.log(x('d'))                         //undefined
+
+-- you can add padding to it to make the bands look nicer: 
+
+const x = d3.scaleBand()
+            .domain(['a','b','c'])         
+            .range([0,1000]) 
+            .innerPadding(0.2)               // value from 0 to 1 that represents the space between each band. the scale is 0 to 1 STEPS which is from the start of one band to the start of the next
+            .outerPadding(0.1)               // this will set the padding on the left and right of the starting and ending band
+
+you can also just do padding(0.3) and it will set innerPadding and outerPadding to the same number 
+ 
+-- When you use scaleBand, the width of the band will be calculated by the function that you created & other attributes like padding. To return this calculated value you can use bandwidth() method
+
+x.bandwidth()       // will return the width of each band after applying your scale and padding and stuff.
+x.scale()           // will return the distance between start of one band and the next. 
+
+-------- note on how to specify domain 
+
+When creating a scale, the input domain is based on the input data. 
+For example in our linear scale, we specified the domain to be [0, 282]. We knew 282 is the height of the tallest person in the input data. But what if we don't know?
+
+We need a way to find the max height or min height of the input data. D3 has a method for that. 
+
+let max = d3.max(people, person => person.height)      // this is a method that takes 2 parms. the first is the input data array, the second is a function that returns the value to be compared
+                                                       // this will return the max data_point.height in the data array.
+
+let min = d3.min(grades, grade => grade.score)         // does the same but finds the minimum 
+
+let minmax = d3.extent(people, person => person.age)  // this will return a TUPLE [18,75] which the first item is the minimum and the second is the max. 
+
+-- it is common to use this in place of the domain variable 
+
+let y = d3.scaleLinear()
+          .domain[0, d3.max(data, p => p.height)]     // call it right in the domain funtion
+          .range([0, height])
+
+----
+
+When inputting for a band scale, in which you need to input a set of values rather than a number tuple, it is recommended to use the map() function.
+arr.map(p => p.height) iterates over every item in the array and returns a new array with only what is returned. 
+
+for making bands, the input domain must be an array of values. so we can just call map when setting the domain variable:
+
+let x = d3.scaleBand()
+          .domain(data.map(point => point.name))     // call it right in the domain function. this will "name" every band that is created.
+          .range([0, width])                         // use constants for your height and width to make it easily scalable.
+
+------------------ Bars on the chart start at the top ------------------
+
+the bars on the barchart seem to start at the top and grow downward...
+-- the reason for this is that SVG 'rect's use the x and y attributes to determine location within the svg, except the x and y coordinates are the top left point of the rectangle.
+
+To fix this we need to accomodate for this when we set our y attribute
+
+d3.select('svg')
+  .selectAll('rect')
+  .data(data)
+  .enter()
+  .append('rect')
+  .attr('x', point => x(point.name))
+  .attr('y', point => height - y(point.height))     // we take the height (which can be variable), then minus the height of the bar - except we need to scale the height of the bar to the range first.
+                                                    // this essentially will LOWER the top of the rectangle, and due to math the bottoms will align with the bottom of the SVG.
+ 
