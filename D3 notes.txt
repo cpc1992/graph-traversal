@@ -231,7 +231,7 @@ let minmax = d3.extent(people, person => person.age)  // this will return a TUPL
 -- it is common to use this in place of the domain variable 
 
 let y = d3.scaleLinear()
-          .domain[0, d3.max(data, p => p.height)]     // call it right in the domain funtion
+          .domain([0, d3.max(data, p => p.height)])    // call it right in the domain funtion
           .range([0, height])
 
 ----
@@ -261,3 +261,98 @@ d3.select('svg')
   .attr('y', point => height - y(point.height))     // we take the height (which can be variable), then minus the height of the bar - except we need to scale the height of the bar to the range first.
                                                     // this essentially will LOWER the top of the rectangle, and due to math the bottoms will align with the bottom of the SVG.
  
+---------------- Adding Axis' to our chart ----------------
+
+To add axis to an SVG can be very complicated. you would need to add a svg path and add tickes and text manually to it
+
+D3 has an api to do it that makes it easier. It generates all the code for us, all we need to pass it is a scale (which we've already covered)
+
+let axisGenerator = d3.axisTop(scale)         
+let axisGenerator = d3.axisRight(scale)
+let axisGenerator = d3.axisBottom(scale)      // creates a generator based on the scale we pass in with the ticks on the bottom
+let axisGenerator = d3.axisLeft(scale)
+
+svg.append('g').call(axisGenerator)           // attaches the axis to our SVG (draws the SVG paths to make the axis)
+
+-- The top functions return an axis generator. After creating the generator we can connect it to our SVG via the .call() method. this will generate the axis SVG code. 
+-- Top, Right, Bottom, Left indicate where the ticks and text are going to be. So if you want an axis on the left side, you want AxisLeft
+-- AXIS must always be in their own group. so just append('g') before calling any generator.
+
+How do we apply attributes to our axis?
+
+-- we want to apply attributes to the GROUP of the axis. this is because the axis is made up of like 10 different svg elements. 
+we need to apply the attribute change to the GROUP so it applies to all of them.
+
+For example the x axis is still at the top of the screen. move it down by applying the transform translate attribute to the group:
+
+svg.append('g')
+.attr('transform', `translate(0, ${height})`)
+.call(axisGenerator)
+
+NOTE: there is a problem if we just stick this code in!!
+The axis are literally placed at the top and bottom of the SVG, and the ticks are cut off. 
+To fix this we must introduce margin.
+
+---------------- Margin convention to fix axis problem ----------------
+
+When we create a bar chart we should add margin to surrounding our chart so that ifno hanging off of our chart will be displayed on the screen.
+Here is a good blog about this topic: https://gist.github.com/AdamMescher/d6f432d169743937f191cab778462d38
+
+1) create a margin object with margin specified for top, bottom, left, and right
+
+const margin = {top: 30, bottom: 30, right: 20, left: 20}
+
+2) subtract the margin for the top and bottom from the height. and subtract the left and right from the width.
+These are the variables used to define our SVG element.
+
+let width = 800 - margin.left - margin.right;
+let height = 500 - margin.top - margin.bottom;
+
+3) BUT add them back in at creation time of the SVG. THEN append a group that has the transform attribute. 
+This transform attribute will make it so that everything INSIDE OF IT IS SHIFTED DOWN AND RIGHT BY THE MARGIN.
+
+let svg = d3.select(element)
+            .append('svg')
+              .attr('height', height + margin.top + margin.bottom)
+              .attr('width', width + margin.left + margin.right)
+            .append('g')                                                           // an SVG g element creates a GROUP. everything in this group gets the groups attributes applied to them
+              .attr('transform', `translate(${margin.left}, ${margin.top})`)       // the transform attribute can be applied to any element. translate shifts the element by (x, y) amounts
+
+---------------- Fix the y axis of the graph from showing backwards ----------------
+
+The y axis on the left runs from our height scale to 0 going up (aka its backwards)
+The reason it does this is that svg elements default run from top to bottom on the y axis. just like when initially put the bars in, they were stuck to the top and shot down.
+
+We need to accomodate this by:
+
+1) switch the output range on our y scale to the opposite - instead of 0 to height (500), we will now go from height (500) to 0. 
+This is trippy think about it - the tallest person will have an input of like 250cm. after going through the y scale function, it will return 0. because we inverted the scale.
+
+let y = scaleLinear()
+        .domain([0, d3.max(data, data_point => data_point.height)])
+        .range([height, 0])
+
+-- you can think of it this way: now it does as it should, the range that is returned is now the distance from the TOP of our chart. so it effectively shows us the top of where our bar should be.
+
+2) change the y attribute of our bars to just the y translated version of our height. (we had it like this before we adjusted them in the step called "Bars on the chart start at the top")
+-- since we are now returning the distance from the top of the screen, we only need to shift it down by that much.
+
+selection.enter()
+        .append('rect')
+        .attr('x', point => x(point.name))
+        .attr('y', point => y(point.height)) // shift down by the distance the bar is from the top of the screen.
+
+3) change the height attribute of our bars to be the entire screen minus the distance from the top 
+-- this comes out to height - y(point.height)
+
+selection.enter()
+        .append('rect')
+        .attr('x', point => x(point.name))
+        .attr('y', point => y(point.height))
+        .attr('width' x.bandwidth())
+        .attr('height', point => height - y(point.height))
+
+-- these three steps will alter the y axis to be starting at 0 and going up. and it also accomodates for our bars to be correct too.
+It makes sense if you think about it. but if you are generating a barchart with axis, just do these three steps and dont think about it. 
+
+NOTE: if you change the y scale domain starting number from 0 to a higher number, the y axis will only show from that number to the max, making the bars delta look more drastic.
