@@ -130,7 +130,8 @@ let svg = d3.select(element)      // this will find an element on the DOM and re
 
 let selection = svg.selectAll('rect') // 1. now we are searching for all existing <rect> elements within the SVG element => returns a d3 selection. 
                                      // If you ran this previously, there may be some previously data-bound rect elements, THATs the point. on first run this will return an empty selection
-   .data(data);                      // 2. This takes in an ARRAY of data and BINDS it to the selection. this returns a 3 part selection. enter, update, and exit. this line specifically returns the update section
+   .data(data,                       // 2. This takes in an ARRAY of data and BINDS it to the selection. this returns a 3 part selection. enter, update, and exit. this line specifically returns the update section
+   point => point);                  // this function is HOW THE DATA POINTS ARE COMPARED. if an existing point matches what this function returns, it is considered the "same point"
                                      // you can access the enter section by putting a .enter() same with exit(). 
                                      // enter represents the set of data that is new from the data you binded. 
                                      // update represent the set of data that you binded that already existed in the selection. 
@@ -150,7 +151,7 @@ selection.enter()                    // 3. we are now going to access the set of
 selection.exit()                     // 9. this is accessing the data exit selection aka the data that existed previously, but does not exist in the newly bound data. => returns a selection of already existing bound data 
    .remove()                         // 10. this will remove all of the old data from the svg. 
 
-selection.update()                   // 11. this will access the data that already existed in the original selection THAT matches the data we bound to the selection. => returns a selection of elements that are already bound.
+selection                            // 11. this will access the data that already existed in the original selection THAT matches the data we bound to the selection. => returns a selection of elements that are already bound.
    .attr('fill', 'red')              // 12. this sets the color of the already existing elements to red.
 
 -- essentially what we did was append a new set of data. all matching data that matches the newly bounds data turns red. any NEW data appears on the screen in green. and any already existing data that
@@ -356,3 +357,51 @@ selection.enter()
 It makes sense if you think about it. but if you are generating a barchart with axis, just do these three steps and dont think about it. 
 
 NOTE: if you change the y scale domain starting number from 0 to a higher number, the y axis will only show from that number to the max, making the bars delta look more drastic.
+
+---------------- how to add text to our SVG ---------------------
+There is an svg element called text that you can add. to actually add the text you need to call the text() method to the element.
+-- It can take a x and y attribute to place it correctly 
+
+svg.append('text')
+.attr('x', width/2)                 // this will center the text to the width of the SVG 
+.attr('y', height)                  // put the text at the bottom of the screen
+.text('The worlds tallest man')     // this actually add the text
+.attr('text-anchor', 'middle')      // this changes the anchor of the text to the middle to help center text
+
+-- if you run this without the last line, it will show the text on the screen except there is one problem:
+we are putting the x value to be the width / 2 which ALMOST centers the text, except svg element by default
+anchor themselves by the top left of the element. meaning the text will START at the middle of the screen. making it off center a little
+-- to fix this there is an easy solution --> use the 'text-anchor' attribute. the 'middle' value will change the anchor to the middle of the text no matter how long it is 
+
+NOTE: shapes default have their anchor in the middle
+
+------ how to get the text to be sideways (like going UP the y axis)
+
+-- you can add a transformation to rotate the text 90 degrees. 
+DISCLAIMER: if you do this your x and y attributes will get flipped, depending on which way you rotate it.
+-- I recommend just putting random nubmers or negative numbers in the x and y attributes to figure out which way each attribute moves the text.
+
+
+svg.append('text')
+    .attr('x', -height/2)                 // 2) we use negative height in the x attr now. 
+    .attr('y', -35)                       // 2) i just tried different numbers here to get it to look right
+    .text("Height in cm")
+    .attr('text-anchor', 'middle')
+    .attr('transform', 'rotate(-90)')     // 1) since we rotated it, the x and y get all messed up 
+
+----------------- adding updates to our chart ---------------------
+So generally we want to use the joining methods enter(), update(), and exit() to change the data. this requires that we have multiple sets of data to 
+flick between. In this section we will do just that. 
+
+In our chartwrapper class we first want to split every thing that is going to change into a different method called update()
+-- this will include:
+the bars - because obviously different data will have different heights 
+the scale - because we are using the max height in the data to set the y scale. and we use the number of people in the data to set the x scale. 
+the axis - because we use the scales to set the axis. 
+
+-- the SVG itself and the big group to accomodate for margin will stay in the constructor. 
+-- as will the text describing the axis'
+
+update(){
+
+}
