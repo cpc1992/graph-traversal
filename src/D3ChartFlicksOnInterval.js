@@ -17,15 +17,11 @@ class D3Chart{
             .attr('transform', `translate(${margin.left}, ${margin.left})`)
 
 
-        vis.title = vis.svg
-            .append('text')
+        vis.title = vis.svg.append('text')
             .attr('x', width / 2)
-            .attr('y', height + 40)  
+            .attr('y', height + 40)
             .attr('text-anchor', 'middle')
-
-        
-        
-        
+            .text("Worlds Tallest men/women")
 
         vis.svg.append('text')
             .attr('x', -height/2)
@@ -41,46 +37,59 @@ class D3Chart{
 
 
         /* this is calling a real api to get the data */
-        // Promise.allSettled([
-        //     d3.json(url_men),
-        //     d3.json(url_women)
-        // ]).then(dataset => {
-        //     let [men, women] = dataset
+        Promise.allSettled([
+            d3.json(url_men),
+            d3.json(url_women)
+        ]).then(dataset => {
+            console.log(dataset)
+            let [men, women] = dataset
+            console.log(typeof men)
+            men.value.push({name: 'Clifford', height: 167})
+            women.value.push({name: 'Liese', height: 167})
 
-        //     men.value.push({name: 'Clifford', height: 167})
-        //     women.value.push({name: 'Liese', height: 167})
+            vis.data = men.value
+            vis.update()
 
-        //     vis.men_data = men.value
-        //     vis.women_data = women.value
-        //     vis.update('men')
+            let toggle = false
 
-        // })
+            d3.interval(()=>{
+                vis.data = toggle ? men.value : women.value
+                vis.update()
+                toggle = !toggle
+            },6000)
+        })
 
-            vis.men_data= [{name: 'a', height: 50},
-            {name: 'b', height: 60},
-            {name: 'c', height: 70},
-            {name: 'd', height: 80},
-            {name: 'e', height: 90}]
 
-            vis.women_data = [{name: 'm', height: 90},
-            {name: 'n', height: 150},
-            {name: 'l', height: 20},
-            {name: 'b', height: 10},
-            {name: 'q', height: 50},
-            {name: 'z', height: 100}]
+            /* this is to simulate the data */
+        //     let men = {value: [{name: 'a', height: 50},
+        //     {name: 'b', height: 60},
+        //     {name: 'c', height: 70},
+        //     {name: 'd', height: 80},
+        //     {name: 'e', height: 90}]}
 
-            vis.update('men')
+        //     let women = {value: [{name: 'm', height: 90},
+        //     {name: 'n', height: 150},
+        //     {name: 'l', height: 20},
+        //     {name: 'b', height: 10},
+        //     {name: 'q', height: 50},
+        // {name: 'z', height: 100}]}
+
+        //     vis.data = men.value
+        //     vis.update()
+
+        //     let toggle = false
+
+        //     d3.interval(()=>{
+        //         vis.data = toggle ? men.value : women.value
+        //         vis.update()
+        //         toggle = !toggle
+        //     },5000)
+
 
     }
 
-    update(data){
+    update(){
         let vis = this
-        if (data == 'men'){
-            vis.data = vis.men_data
-        }else{
-            vis.data = vis.women_data
-        }
-        
         
         // create scales based on the data max height and the number of data points
         let x = d3.scaleBand()
@@ -107,18 +116,7 @@ class D3Chart{
             .duration(500)
             .call(bottomAxis)
 
-        vis.title
-            .transition()
-            .duration(5000)
-            .style("font-size",'40px')  
-            .transition()
-            .duration(250)
-            .style("font-size",'18px')  
-            .text(data == 'men' ? 'Worlds Tallest Men' : 'Worlds Tallest Women')
 
-        // .transition()
-        // .duration(250)
-        // .style("font-size","16px");
         
         // select all rectangles in the SVG and join the data
         let selection = vis.svg.selectAll('rect')
@@ -127,7 +125,6 @@ class D3Chart{
         // remove all old data points
         selection.exit()
         .transition()
-        .delay((d, i) => i*100)
         .duration(500)
         .attr('height', 0)
         .attr('y', height)
@@ -156,7 +153,6 @@ class D3Chart{
             .attr('width', x.bandwidth())
             .attr('height', p => 0)
             .transition()
-            .delay((d, i) => i*100)
             .duration(500)
             .attr('y', p => y(p.height) - 1)
             .attr('height', p => height - y(p.height))

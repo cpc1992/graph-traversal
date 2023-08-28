@@ -108,7 +108,7 @@ The element will be enacted on by D3 to attach our D3 visuals. W
         );
     }
 
------------------- D3 data joining------------------
+------------------ D3 data joining 101 ------------------
 Good blog post on data(), enter(), update(), and exit()
 https://bost.ocks.org/mike/join/
 
@@ -151,6 +151,7 @@ selection.enter()                    // 3. we are now going to access the set of
 selection.exit()                     // 9. this is accessing the data exit selection aka the data that existed previously, but does not exist in the newly bound data. => returns a selection of already existing bound data 
    .remove()                         // 10. this will remove all of the old data from the svg. 
 
+// this is how you do update() - you get it right out of the box (dont need to cal update())
 selection                            // 11. this will access the data that already existed in the original selection THAT matches the data we bound to the selection. => returns a selection of elements that are already bound.
    .attr('fill', 'red')              // 12. this sets the color of the already existing elements to red.
 
@@ -397,11 +398,222 @@ In our chartwrapper class we first want to split every thing that is going to ch
 -- this will include:
 the bars - because obviously different data will have different heights 
 the scale - because we are using the max height in the data to set the y scale. and we use the number of people in the data to set the x scale. 
-the axis - because we use the scales to set the axis. 
+the axis - because we use the scales to set the axis. NOTE remember that axis's are weird and need to be generated in a group. leave the group in the constructor and just put the call() in the update function
 
+Thing that will stay in the constructor
 -- the SVG itself and the big group to accomodate for margin will stay in the constructor. 
--- as will the text describing the axis'
+-- as will the text describing the axis's
+-- and the group that the axis are generated in 
+-- the data that is obtained from the API call. If theres multiple data sets then use promise.all()
 
-update(){
+HOW to connect the svg and stuff we created in the constructor to the update function?
+-- Anything that we create in the constructor will be set as a property of the class, this way we can access it in the update() function without passing anything to it.
+-- to set it as a class property we can use: this.svg = svg. or if you dont want to use the "this" key word:
+const visualization = this;
+visualization.svg = svg;
+visualization.leftAxisGroup = visualization.avg.append('g')
 
-}
+//Call api
+Promise.all(d3.json('https://example.com/data/1), d3.json('https://example.com/data/2'))        // call all apis
+.then(dataset => {                                                                              // when the apis are all done dataset will be an array of the resolved data 
+    visualization.data = dataset[0]                                                             // create a CLASS PROPERTY and set the data to it. (yes this is only setting it to the first one)
+    visualization.update()                                                                      // call this classes update function to redraw the chart 
+
+    // down here you can do some d3.interval stuff to flip between the data sets by
+    // setting vis.data to dataset[1] then calling update again, or whatever algorithm you want
+})
+
+------------------ advanced D3 data joining 102 ------------------
+--- GENERAL UPDATE PATTERN ---
+Okay so when you append data to some seclection, obviously on the first run, you are appending a set of data to an empty selection. 
+This results in ONLY the enter() function having nodes in it and they all need to be appended to the screen
+
+But if there is existing data on the screen, then the selection will not be empty and you need to deal with update() and exit()
+
+Wait... when you join a new set of data, how does d3 KNOW that this new data point matches up with this existing data point? 
+1) if you call it just like this: 
+
+selection.data(new_data)      // just pass the data to the selection
+
+then d3 will match the data via INDEX IN THE ARRAY. This means the new data at slot 0 will be matched with the old data in slot 0, 1 to 1, 2 to 2, and etc
+-- If the new data array has more slots that the old data array, then there will be data items in enter() that you will need to append onto the screen
+-- if the is less new data than old data, then there will be data in exit() you will need to get rid of.
+
+2) if you don't want to match up the data by its array index you can pass a function as a second parameter that returns HOW THE DATA WILL BE COMPARED
+
+selection.data(new_data, p => p.name)       // a function is passed to the selection. it is called on every data item and d3 uses what it returns to match the data
+
+-- now it will treat data with matching name as the same data point.
+
+When you are dealing with update() and exit(), the nodes will initially exist "state" they were in before the data join. 
+-- So in update(), the existing data nodes will have whatever x, y, height, width, fill attrbutes that they had when they were appended. 
+-- if they need to move or change height/size based on their NEW height value, you will need to tell it to do that in the update() function 
+    -- if you have a matching point in the first data set and the second data set, they you will need to MOVE HIM to where he is supposed to be when you join the second data set.
+-- if you want items to transition in, then you need to add the transitions to the enter() function
+-- if you want items to transition out, then you need to add the transtions to The exit() function
+
+-------------------- transitions ----------------------
+
+transitions are easy to add to data nodes. in any of the selection functions (enter update exit) you simply add a transition().duration(500)  <- the number is how many miliseconds it takes to go from the first state to the second
+-- Everything BEFORE the transition().duration(n) call will be applied to the state of the data node IMMEDIATELY. 
+-- Everything AFTER the transtion().duration(n) call will be applied to the node over the duration entered. 
+
+1) At the time of an enter(), all attributes start at 0. so if you add a transtion to a rectangle on enter(), then put attr('height', 100) after the transition => this will make the rectangle transition 
+from height 0 to height 100. making it pop up from the bottom/top of the screen.
+
+selection.enter()
+    .append('rect')
+        .attr('x', p => x(p.name))              
+        .attr('y', 0)  
+        .attr('fill', 'green')  
+        .attr('width', x.bandwidth()) 
+        .attr('height', 0)                        // on enter(), we will append a rectangle and make its height 0 immediately
+        .transition()                             // call transition
+        .duration(500)
+        .attr('height', p => p.height)            // over .5 seconds, it will transition to height of the data node, make it look like its growing from the ceiling.
+
+2) At the time of an update(), all attributes will start at whatever "state" they were in after they entered the screen. So it is common to put a transition(), then change the location of the node so that it moves to where it
+should go next depending on the data of the node. 
+
+selection.attr('fill', 'blue')                    // if there are any existing nodes, immediately flash color them blue
+    .transition()                                 // call transition
+    .duration(500)
+    .attr('x', p => x(p.name))                    // then over half a second move it to the spot in which is belongs in the new data set. 
+
+
+3) at the time of an exit(), same as update(), nodes start with the attribute that they had when they were appended. 
+
+selection.exit()
+    .attr('fill', 'red')                           // exiting nodes will flash red
+    .transition()
+    .duration(500)
+    .attr('height', 0)                             // then will shrink back into the ground over 500 ms.
+    .attr('y', height)
+    .remove()
+
+bottom line: think of the state BEFORE the enter(), update(), exit().... then call transition... then think of the state you want it to be in after the transition.
+NOTE: this all connects to HOW you are matching the new data up with the old data. think about that too (read prev section)
+
+-------------------- transition our axis's
+
+Axis's are weird and thus have a different way to transition them. its actually easier: 
+
+just call transition before the call() function is made.
+
+visualization.leftAxisGroup
+    .transition()
+    .duration(500)
+    .call(leftAxisGenerator)
+
+-- now when the axis is updated, the exit() text will fade out. update()text will shift to the correct location on the axis. and enter() text will fade in.
+
+------------------- transition our text
+Transitioning text when it changes is different from transitioning data nodes. 
+
+in the constructor (never changes):
+
+vis.title = vis.svg                             // create the text in the svg and put its location in the write spot
+    .append('text')
+    .attr('x', width / 2)
+    .attr('y', height + 40)  
+    .attr('text-anchor', 'middle')
+
+in the update function (called whenever the data changes)
+
+vis.title                                                                       // okay so this code will run every time update is called. 
+    .transition()                                                               // whatever state it is currently in we will transition okay the below attributes over 250 ms
+    .duration(250)
+    .style("font-size",'0px')                                                   // font will change to size 0 over the transition time
+    .transition()
+    .duration(250)                                                              // now we got another transition that will happen after the first one
+    .style("font-size",'18px')                                                  // font will change over the next 250 ms to 18 px
+    .text(data == 'men' ? 'Worlds Tallest Men' : 'Worlds Tallest Women')        // note TEXT IS APPLIED IMMEDIATELY WHEN THIS TRANSTION GROUP HITS... it does not transition     <--- this is important
+
+NOTE: this there is no enter, update, or exit. but this kinda simulates it
+
+At FIRST render, there is NO TEXT. so the state of it when we hit the update function, is text =''. It then transitions to font size 0, but it is still invisible to us because trext = ''
+Then the text is applied and text = 'World's Tallest Man' or whatever the data specifies. the text is applied immediately and will immediately flash in at the start of the transition.
+one more time: text is not transitionable.
+THEN the font will increase from 0 to 18 over the span of 250 ms.
+
+On SECOND render, the text already exists stating 'Worlds Tallest Man'. Then it shrinks to font-size 0 over 250 ms. 
+Then the text immediately changes to 'Worlds Tallest Women' in between transitions. 
+Then the text will grow to 18px over the span of 250 ms.
+
+------------------ switching data based on react button ---------------------
+To connect the data to react state,
+
+basic react stuff: 
+1) create 2 button in the react app.js. These buttons will determine which data set we will visualize
+2) the button will set the data state item to 'men' or 'women'
+3) pass the data state item down to the Chartwrapper component as a prop. simple enough.
+
+state things:
+4) ChartWrapper component, on FIRST RENDER ONLY (useEffect with a [] dependency array) will create the D3Chart object. Then it will set the D3Chart as a state item
+5) ChartWrapper component, on EVERY RERENDER EXCEPT THE FIRST when the data prop changes, will call D3Chart.update(data) to update the D3 object with the new data to visualize
+    -- look below for how to do this
+
+D3 class:
+6) The D3 class will call the API to get the data in teh constructor, and immediately call update with the first set of data
+7) The D3 class update function will take in data, and change the visualization based on the data passed. (data = 'men' or 'women')
+
+NOTE: it is okay if the Chartwrapper component rerenders, because the d3 object is only created on first render and is stored in the state which persists through rerenders.
+
+------------------ React thing: call this useEffect for every rerender but not the initial render -------------------
+
+This is a react hook technique that mimics the react lifecycle ComponentDidUpdate 
+-- It calls calls a function for every rerender, but does not call it for the first inital render
+
+1) Create a useRef and set it to false
+2) Create a useEffect that you want to update whenever some prop or something updates
+3) In the useEffect, create a one time use latch that set the useRef to true instead of calling the real code you want. 
+4) after setting the useRef to true, all renders after will call the code you want. 
+
+const didMount = useRef(false);                      // didMount is initially set to false
+
+useEffect(() => {
+    if (didMount.current == false) {                 // if its false set it to true and do nothing else
+        didMount.current = true;
+    } else {                                      
+        console.log(`displaying ${data} data`);      
+        chart.update(data);                           // after the ref is set to true (burning the initial run) we will call the update function everytime after that
+    }
+}, [dataProp]);                                       // this will run every time the prop is changed.
+
+-- the reason we use useRef is because you can change it without rerendering the entire component
+
+----------------- transition delay --------------------
+This is called "per element delay"
+
+When we are displaying an array of data nodes like on the enter(), we can easily set the transition as they come in. They will all transition in within the the span of the transition time
+But something fancy we can do it delay each node in the list by a certain milisecond to make the nodes appear in a wave like fashion. 
+
+enter: .delay(func)
+
+delay() takes in a function that will be run against every item in the data array. It must be applied to a TRANSITION. (to easily do this, just put it in between the transiton() and the duration())
+-- the function we passed must return a number in miliseconds to delay all of the applied transitions by for that node. 
+
+selection.enter()
+    .append('rect')
+    .attr('x', p => x(p.name))
+    .attr('y', height)
+    .attr('width', x.bandwidth())
+    .attr('height', p => 0)
+    .transition()
+    .delay((d, i) => i*100)                      // this function will run on every data node in the array. And it will delay all transitions below this one by 100 ms depending on the slot in the array.
+    .duration(500)
+    .attr('y', p => y(p.height) - 1)
+    .attr('height', p => height - y(p.height))
+
+-- the bars in the above code will come in a like a wave
+-- you can return a random number to allow for your bars to appear in a random order.
+
+---------------- you can also use this to set a standard transition
+
+.delay(2000)        // this will just delay the transtion by 2 seconds for all items.
+
+---- other cool d3 functions: 
+.each()    A function that can be paried with transitions. the function is called for every node ewither before the transition started or after the transtion has ended. look it up its kinda cool
+.on()      you can use this for like on mouse over or mouse outs to change attributes like onHover effects
+selection.append('title').text(d => d.height)    You can append a title element to an SVG element. Title text does not show up on the screen it is like metadata. BUT the cool thing is that when you HOVER OVER IT it shows the text as a tooltip.
+    
