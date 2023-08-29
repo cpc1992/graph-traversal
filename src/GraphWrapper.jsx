@@ -20,7 +20,7 @@ function GraphWrapper() {
   //   }
   // }, [data]);
 
-  return <div ref={wrapper}></div>;
+  return <div className="GraphWrapper-main" ref={wrapper}></div>;
 }
 
 export default GraphWrapper;

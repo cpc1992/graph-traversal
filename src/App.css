@@ -1,0 +1,68 @@
+html {
+  height: 100%;
+  box-sizing: border-box;
+
+  /* These apply to all elements */
+
+  /* color variables */
+  /* --textcolor: #d1d1d1; */
+  --textcolor: #d9dbdd;
+
+  --firstcolor: #1d1d20;
+  --secondcolor: #598392;
+  --thirdcolor: #aec3b0;
+  --fourthcolor: #eff6e0;
+  --fifthcolor: #8e5572;
+  --fifthcolor2: #c97b84;
+
+  /* font variables */
+  --welcomesize: 6rem;
+  --welcomeweight: 200;
+  --titlesize: 2rem;
+  --textsize: 1.1rem;
+  --textweight: 300;
+
+  /* debuggin variables */
+  --blackborder: 1px black solid;
+  --whiteborder: 1px white solid;
+  --redborder: 1px red solid;
+  --orangeborder: 1px orange solid;
+  --yellowborder: 1px yellow solid;
+  --greenborder: 1px lightgreen solid;
+  --blueborder: 1px lightblue solid;
+  --purpleborder: 1px lavender solid;
+  --pinkborder: 1px pink solid;
+
+  /* transition speed */
+  --transitionspeedfast: 0.3s;
+  --transitionspeedmid: 0.5s;
+  --transitionspeedslow: 0.7s;
+
+  /* padding for border */
+  --leftborderpadding: 25px;
+}
+
+body {
+  background-color: #011632;
+  /* color: #a7abb1; */
+  color: var(--textcolor);
+  font-family: "Roboto", sans-serif;
+}
+
+.App-content {
+  margin: auto;
+  display: flex;
+  max-width: 1650px;
+  /* border: var(--whiteborder); */
+}
+
+.GraphWrapper-main {
+  flex: 7;
+}
+.ControlPanel-main {
+  flex: 4;
+}
+
+.Graph-svg {
+  z-index: 2;
+}
