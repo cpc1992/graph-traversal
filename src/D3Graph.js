@@ -10,15 +10,15 @@ class D3Graph{
         const vis = this
 
         // graph generator
-        let numNodes = 350
-        let maxConnections = 1
+        let numNodes = 400
+        let maxConnections = 2
         
         let randomDataset = {nodes: [], edges: []}
         for (let i = 0; i < numNodes; i++){
             let nodeObj = {id: i}
             randomDataset.nodes.push(nodeObj)
-
-            let connections = maxConnections
+            let connections = Math.floor(Math.random()*maxConnections) 
+            connections = maxConnections -1
             for (let j = 0; j < connections; j++){
                 let randomTarget = Math.floor(Math.random() * numNodes)
                 while (randomTarget == j){
@@ -33,8 +33,8 @@ class D3Graph{
         
 
 
-        let num_rows = 15
-        let num_cols = 15
+        let num_rows = 17
+        let num_cols = 17
 
         // let grid = new Array(num_rows)
         // for (let i = 0; i < num_rows; i++){
@@ -71,48 +71,56 @@ class D3Graph{
 
 
 
-        let displayDataset = gridDataset
-        // displayDataset = randomDataset
-       
         
+        // let iterations = 20
+        // let strength = -100
+        // let displayDataset = gridDataset
+
+
+        let iterations = 30
+        let strength = -50
+        let displayDataset = randomDataset
+
         let nodes = displayDataset.nodes.map(p => ({...p}))
         let edges = displayDataset.edges.map(p => ({...p}))
         
-        let zoom = 1.2
+        let zoom = 1.3
         let svg = d3.select(element)
             .append('svg')
-            // .attr('width', width + margin.right + margin.left)
-            // .attr('height', height + margin.top + margin.bottom)
             .attr("viewBox", [-(width - margin.right - margin.left)*zoom / 2, -(height-margin.top-margin.bottom)*zoom / 2, width*zoom, height*zoom])
-
-            .attr('style', 'background-color: grey')
+            // .attr('style', 'background-color: grey')
             .append('g')
             .attr('transform', `translate(${margin.left}, ${margin.left})`)
 
         
         let simulation = d3.forceSimulation(nodes)
-        .force("link", d3.forceLink(edges).id(node => node.id).distance(30).iterations(17)) // creates a link between nodes. id() tells us how to edges connect to each other... via node.id. if not used, will default to index in array
-        .force("charge", d3.forceManyBody().strength(-60))
+        .force("link", d3.forceLink(edges).id(node => node.id).distance(30).iterations(iterations)) // creates a link between nodes. id() tells us how to edges connect to each other... via node.id. if not used, will default to index in array
+        .force("charge", d3.forceManyBody().strength(strength))
         .force("x", d3.forceX())
         .force("y", d3.forceY());
             
         let link = svg.append('g')
             .attr('stroke', 'black')
-            .attr('stroke-width', 2)
+            .attr('stroke-width', 1)
             .selectAll('line')
             .data(edges)
             .join('line')
+
+
+        // const color = d3.scaleOrdinal(d3.schemeSet1);
+        const color = d3.scaleSequential(d3.interpolateRainbow);
         
         link.append('title')
-            .text((d, i) => `Salutations, I'm edge ${i}`)        
+            .text((d, i) => `Salutations, I'm edge ${i}`)    
+
         let node = svg.append('g')
-            .attr('stroke', 'teal')
-            .attr('stroke-width', 1)
+            .attr('stroke', 'white')
+            .attr('stroke-width', 3)
             .selectAll('circle')
             .data(nodes)
             .join('circle')
-            .attr('r', 7)
-            .attr('fill', 'black')
+            .attr('r', 8)
+            .attr('fill', (d, i) => color(i/numNodes))
         
         node.append('title')
             .text((p,i) => `Hii I'm node ${i} (:`)
