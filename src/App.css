@@ -53,11 +53,14 @@ body {
   margin: auto;
   display: flex;
   max-width: 1650px;
-  /* border: var(--whiteborder); */
+  max-height: 1000px;
+
+  border: var(--whiteborder);
 }
 
 .GraphWrapper-main {
   flex: 7;
+  border: var(--greenborder);
 }
 .ControlPanel-main {
   flex: 4;
