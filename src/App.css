@@ -40,6 +40,12 @@ html {
 
   /* padding for border */
   --leftborderpadding: 25px;
+
+  /* colors for the graph nodes */
+  --coral: #ff5e5b;
+  --violet: #8367c7;
+  --teal: #5fb8c2;
+  --rosegold: #e49273;
 }
 
 body {
