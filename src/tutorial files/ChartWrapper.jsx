@@ -6,9 +6,6 @@ function ChartWrapper({ data }) {
   const didMount = useRef(false);
   const [chart, setChart] = useState(null);
 
-  useEffect(() => {
-    console.log("chartwrapper react component rerendered");
-  });
   // ON FIRST RENDER CREATE THE CHART OBJECT
   useEffect(() => {
     console.log("set up chart");

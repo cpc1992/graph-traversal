@@ -9,19 +9,26 @@ function ControlPanel({
   algorithm,
   setAlgorithm,
 }) {
+  const [sliderVal, setSliderVal] = useState(numNodes);
+
   return (
     <div className="ControlPanel-main">
       <div className="ControlPanel-generator">
         <h2>Graph Generator</h2>
-        <label htmlFor="nodeslider">Number of Nodes: {numNodes}</label>
+        <label htmlFor="nodeslider">Number of Nodes: {sliderVal}</label>
         <input
           id="nodeslider"
           type="range"
           min="1"
-          max="400"
-          value={numNodes}
+          max="1000"
+          value={sliderVal}
           onChange={(e) => {
-            setNumNodes(e.target.value);
+            setSliderVal(e.target.value);
+          }}
+          onMouseUp={(e) => {
+            window.localStorage.setItem("localNumNodes", sliderVal);
+            setNumNodes(sliderVal);
+            window.location.reload();
           }}
         />
         <label htmlFor="connectallnodes">
@@ -33,9 +40,15 @@ function ControlPanel({
               setConnectAll((prev) => !prev);
             }}
           />
-          Connect all nodes
+          Guaratee that all nodes are connected
         </label>
-        <button>Redraw</button>
+        <button
+          onClick={() => {
+            window.location.reload();
+          }}
+        >
+          Redraw
+        </button>
       </div>
       <div className="ControlPanel-algorithm">
         <h2>Traversal Visualizer</h2>

@@ -14,7 +14,7 @@
   flex-direction: column;
   margin: 20px;
   padding: 10px;
-  border: var(--redborder);
+  /* border: var(--redborder); */
   gap: 20px;
 }
 .ControlPanel-algorithm {
@@ -22,7 +22,7 @@
   flex-direction: column;
   margin: 20px;
   padding: 10px;
-  border: var(--redborder);
+  /* border: var(--redborder); */
   gap: 20px;
 }
 .ControlPanel-algochoice {

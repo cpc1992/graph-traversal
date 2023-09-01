@@ -1,11 +1,51 @@
 import * as d3 from "d3";
 
-const width = 900;
-const height = 900;
+let width = 1500;
+let height = 1500;
+// const width = 900;
+// const height = 900;
 
 class D3Graph {
-  constructor(element) {
+  constructor(element, graphStructure) {
     const vis = this;
+    let numNodes = graphStructure.nodes.length
+
+    if (numNodes < 100) {
+      height = 500
+      width = 500
+
+    } else if (numNodes < 200) {
+      height = 600
+      width = 600
+    } else if (numNodes < 300) {
+      height = 700
+      width = 700
+    } else if (numNodes < 400) {
+      height = 800
+      width = 800
+    } else if (numNodes < 500) {
+      height = 900
+      width = 900
+    } else if (numNodes < 600) {
+      height = 1000
+      width = 1000
+    } else if (numNodes < 700) {
+      height = 1050
+      width = 1050
+    } else if (numNodes < 800) {
+      height = 1100
+      width = 1100
+    } else if (numNodes < 900) {
+      height = 1175
+      width = 1175
+    } else {
+      height = 1300
+      width = 1300
+    }
+
+
+
+    d3.select(element).select("svg").remove();
 
     vis.svg = d3
       .select(element)
@@ -40,6 +80,8 @@ class D3Graph {
       .attr("stroke", "white")
       .attr("stroke-width", 1)
 
+    vis.update(graphStructure)
+
   }
 
   update(graphStructure) {
@@ -62,7 +104,9 @@ class D3Graph {
       ) // creates a link between nodes. id() tells us how to edges connect to each other... via node.id. if not used, will default to index in array
       .force("charge", d3.forceManyBody().strength(vis.strength))
       .force("x", d3.forceX())
-      .force("y", d3.forceY());
+      .force("y", d3.forceY().strength(.105));
+
+
 
     // data join the links
     let graphLinks = vis.linkGroup
@@ -151,7 +195,6 @@ class D3Graph {
   }
 
   killSim() {
-    console.log('sim killed')
     let vis = this;
     vis.simulation.stop()
   }

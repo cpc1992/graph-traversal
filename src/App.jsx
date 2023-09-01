@@ -4,9 +4,10 @@ import GraphWrapper from "./GraphWrapper.jsx";
 import ControlPanel from "./ControlPanel.jsx";
 
 function createGraph(numNodes, existingGraph) {
-  // if (existingGraph == false) {
   // create empty graph template
   let newGraph = { nodes: [], edges: [], adjmap: {} };
+  // GENERATE NEW GRAPH
+  // if (existingGraph == false) {
   // loop to numNodes, create node objects, create random connections
   for (let i = 0; i < numNodes; i++) {
     // create and append node object
@@ -21,11 +22,15 @@ function createGraph(numNodes, existingGraph) {
     }
   }
   return newGraph;
-  // }
 }
 
 function App() {
-  const [numNodes, setNumNodes] = useState(2);
+  // window.location.reload();
+
+  const [numNodes, setNumNodes] = useState(
+    window.localStorage.getItem("localNumNodes") || 150
+  );
+
   const [graph, setGraph] = useState(false);
   const [connectAll, setConnectAll] = useState(false);
   const [algorithm, setAlgorithm] = useState("bfs");

@@ -4,19 +4,45 @@ import D3Graph from "./D3Graph.js";
 function GraphWrapper({ graph }) {
   const graphDiv = useRef(null);
   const didMount = useRef(false);
+  const graphUpdatedOnce = useRef(false);
 
-  const [graphInstance, setGraphInstance] = useState(null);
+  const [graphInstance, setGraphInstance] = useState(false);
 
   // ON FIRST RENDER CREATE THE CHART OBJECT
   useEffect(() => {
-    setGraphInstance(new D3Graph(graphDiv.current));
-  }, []);
-
-  useEffect(() => {
-    if (graph != false) {
-      graphInstance.update(graph);
+    if (didMount.current == false) {
+      didMount.current = true;
+    } else {
+      setGraphInstance(new D3Graph(graphDiv.current, graph));
     }
-  }, [graphInstance]);
+  }, [graph]);
+
+  // useEffect(() => {
+  //   if (didMount.current == false) {
+  //     didMount.current = true;
+  //   } else if (graphUpdatedOnce.current == true) {
+  //     graphInstance.killSim();
+  //     graphDiv.current.innerHTML = "";
+  //   } else {
+  //     graphInstance.update(graph);
+  //     graphUpdatedOnce.current = true;
+  //   }
+  // }, [graph]);
+
+  // useEffect(() => {
+  //   if (graph != false) {
+  //     graphInstance.update(graph);
+  //     graphInstance.killSim();
+  //     graphDiv.current.innerHTML = "";
+  //     setGraphInstance(new D3Graph(graphDiv.current));
+  //   }
+  // }, [graph]);
+
+  // useEffect(() => {
+  //   if (graphInstance != false) {
+  //     graphInstance.update(graph);
+  //   }
+  // }, [graphInstance]);
 
   function rotate() {
     graphInstance.killSim();
@@ -33,18 +59,7 @@ function GraphWrapper({ graph }) {
   //   }
   // }, [data]);
 
-  return (
-    <>
-      <button
-        onClick={() => {
-          rotate();
-        }}
-      >
-        Swap
-      </button>
-      <div className="GraphWrapper-main" ref={graphDiv}></div>
-    </>
-  );
+  return <div className="GraphWrapper-main" ref={graphDiv}></div>;
 }
 
 export default GraphWrapper;
