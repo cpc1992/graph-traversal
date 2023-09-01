@@ -7,11 +7,8 @@ function createGraph(numNodes, existingGraph) {
   // if (existingGraph == false) {
   // create empty graph template
   let newGraph = { nodes: [], edges: [], adjmap: {} };
-  console.log("hello");
   // loop to numNodes, create node objects, create random connections
   for (let i = 0; i < numNodes; i++) {
-    console.log("hello2");
-
     // create and append node object
     newGraph.nodes.push({ id: i });
     if (numNodes > 1) {
@@ -19,8 +16,6 @@ function createGraph(numNodes, existingGraph) {
       let randomTarget = Math.floor(Math.random() * numNodes);
       while (randomTarget == i) {
         randomTarget = Math.floor(Math.random() * numNodes);
-
-        console.log("hello3");
       }
       newGraph.edges.push({ source: i, target: randomTarget });
     }
@@ -30,7 +25,7 @@ function createGraph(numNodes, existingGraph) {
 }
 
 function App() {
-  const [numNodes, setNumNodes] = useState(100);
+  const [numNodes, setNumNodes] = useState(2);
   const [graph, setGraph] = useState(false);
   const [connectAll, setConnectAll] = useState(false);
   const [algorithm, setAlgorithm] = useState("bfs");

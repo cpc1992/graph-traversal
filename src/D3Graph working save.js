@@ -50,7 +50,7 @@ class D3Graph {
     let structureEdges = graphStructure.edges.map((p) => ({ ...p }));
 
     // create simulation - pass in nodes and edges, set parameters for the link forces and node forces
-    vis.simulation = d3
+    let simulation = d3
       .forceSimulation(structureNodes)
       .force(
         "link",
@@ -68,8 +68,12 @@ class D3Graph {
     let graphLinks = vis.linkGroup
       .selectAll("line")
       .data(structureEdges)
-      .join("line");
+      .join(
+        (enter) => enter.append("line"),
+        (update) => update.attr("stroke", vis.color2),
+        (exit) => exit.remove());
 
+    console.log(graphLinks)
 
     // data join the nodes
     let graphNodes = vis.nodeGroup
@@ -84,13 +88,13 @@ class D3Graph {
 
 
     // set drag on all nodes
-    graphNodes.call(
-      d3
-        .drag()
-        .on("start", dragstarted)
-        .on("drag", dragged)
-        .on("end", dragended)
-    );
+    // graphNodes.call(
+    //   d3
+    //     .drag()
+    //     .on("start", dragstarted)
+    //     .on("drag", dragged)
+    //     .on("end", dragended)
+    // );
 
     // set mouse over animations on all nodes
     graphNodes
@@ -105,10 +109,9 @@ class D3Graph {
       .on("mouseout", function (d, i) {
         d3.select(this).transition().duration("100").attr("r", 4);
       });
-    let i = 0
-    // set on tick function for all links and nodes
-    vis.simulation.on("tick", () => {
 
+    // set on tick function for all links and nodes
+    simulation.on("tick", () => {
       graphLinks
         .attr("x1", (graphLink) => graphLink.source.x)
         .attr("y1", (graphLink) => graphLink.source.y)
@@ -120,11 +123,11 @@ class D3Graph {
         .attr("cy", (graphNode) => graphNode.y);
     });
 
-
+    simulation.restart()
 
     // Reheat the simulation when drag starts, and fix the subject position.
     function dragstarted(event) {
-      if (!event.active) vis.simulation.alphaTarget(0.3).restart();
+      if (!event.active) simulation.alphaTarget(0.3).restart();
       event.subject.fx = event.subject.x;
       event.subject.fy = event.subject.y;
       d3.select(this).attr("r", vis.nodeBlowupSize);
@@ -140,7 +143,7 @@ class D3Graph {
     // Restore the target alpha so the simulation cools after dragging ends.
     // Unfix the subject position now that it’s no longer being dragged.
     function dragended(event) {
-      if (!event.active) vis.simulation.alphaTarget(0);
+      if (!event.active) simulation.alphaTarget(0);
       event.subject.fx = null;
       event.subject.fy = null;
       d3.select(this)
@@ -149,14 +152,6 @@ class D3Graph {
         .attr("r", vis.nodeNormalSize);
     }
   }
-
-  killSim() {
-    console.log('sim killed')
-    let vis = this;
-    vis.simulation.stop()
-  }
-
-
 }
 
 export default D3Graph;
