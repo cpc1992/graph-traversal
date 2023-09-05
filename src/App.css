@@ -61,18 +61,22 @@ body {
   max-width: 1650px;
   max-height: 1000px;
 
-  /* border: var(--whiteborder); */
+  border: var(--whiteborder);
 }
 
 .GraphWrapper-main {
   flex: 7;
-  /* border: var(--greenborder); */
+  border: var(--greenborder);
   z-index: 99;
 }
 .ControlPanel-main {
-  flex: 4;
+  flex: 2;
 }
 
 .Graph-svg {
   z-index: 100;
+}
+
+svg {
+  /* background-color: grey; */
 }

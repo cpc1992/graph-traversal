@@ -17,6 +17,14 @@
   /* border: var(--redborder); */
   gap: 20px;
 }
+.ControlPanel-startEndSelector {
+  display: flex;
+  flex-direction: column;
+  margin: 20px;
+  padding: 10px;
+  /* border: var(--redborder); */
+  gap: 20px;
+}
 .ControlPanel-algorithm {
   display: flex;
   flex-direction: column;
@@ -28,4 +36,34 @@
 .ControlPanel-algochoice {
   display: flex;
   flex-direction: column;
+}
+
+.ControlPanel-button {
+  padding: 0.35em 1.2em;
+  margin: 0 0.3em 0.3em 0;
+  border: 0.1em solid var(--textcolor);
+  border-radius: 0.12em;
+  box-sizing: border-box;
+  text-decoration: none;
+  text-align: center;
+  transition: all 0.2s;
+  user-select: none;
+}
+
+.ControlPanel-button:hover {
+  letter-spacing: 2px;
+  cursor: pointer;
+  background-color: rgb(217, 219, 221, 0.1);
+}
+
+.ControlPanel-button:active {
+  letter-spacing: 2px;
+  transform: scale(0.98);
+  background-color: rgb(217, 219, 221, 0.1);
+}
+
+.ControlPanel-button-pressed {
+  letter-spacing: 2px;
+  transform: scale(0.98);
+  background-color: rgb(217, 219, 221, 0.1);
 }
