@@ -31,7 +31,7 @@ function ControlPanel({
           id="nodeslider"
           type="range"
           min="1"
-          max="500"
+          max="1000"
           value={sliderVal}
           onChange={(e) => {
             setSliderVal(e.target.value);
@@ -94,12 +94,12 @@ function ControlPanel({
         >
           End
         </a>
-        <a
+        {/* <a
           className="ControlPanel-button "
           onClick={() => setClearClicked((prev) => !prev)}
         >
           Clear
-        </a>
+        </a> */}
       </div>
       {/* SECTION 3 */}
       <div className="ControlPanel-algorithm">

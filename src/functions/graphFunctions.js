@@ -45,7 +45,7 @@ export function createGraph(numNodes, connectAll) {
     // loop to numNodes, create node objects, create random connections
     for (let i = 0; i < numNodes; i++) {
         // create and append node object
-        newGraph.nodes.push({ id: i, level: 0 });
+        newGraph.nodes.push({ id: i, level: 0, start: false, end: false });
         if (numNodes > 1) {
             // create and push random connection - every node will have 1 random connection
             let randomTarget = Math.floor(Math.random() * numNodes);
@@ -184,6 +184,7 @@ export function connectComponents(graphStructure) {
             let newEdge = {
                 source: randomSourceNum,
                 target: randomTargetNum,
+                id: `${randomSourceNum}-${randomTargetNum}`
             };
             graphStructure.edges.push(newEdge);
 
@@ -224,25 +225,23 @@ export function visualizeBFS(graphStructure, start, end) {
         let connectedEdges = graphStructure.edgemap[node.id.toString()]
 
         for (let edge of connectedEdges) {
-            console.log('he8')
 
             if (!visitedEdges.has(edge.id)) {
-                console.log(edge)
                 edge.level = count
                 count += 1
                 visitedEdges.add(edge.id)
             }
 
-            if (!visitedEdges.has(edge.source.id)) {
+            if (!visitedNodes.has(edge.source.id)) {
                 edge.source.level = count
                 count += 1
-                visitedEdges.add(edge.source.id)
+                visitedNodes.add(edge.source.id)
                 queue.push(edge.source)
             }
-            if (!visitedEdges.has(edge.source.id)) {
+            if (!visitedNodes.has(edge.target.id)) {
                 edge.target.level = count
                 count += 1
-                visitedEdges.add(edge.target.id)
+                visitedNodes.add(edge.target.id)
                 queue.push(edge.target)
             }
 
