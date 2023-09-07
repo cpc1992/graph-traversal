@@ -1,6 +1,6 @@
 import { useState, useRef, useEffect } from "react";
 import D3Graph from "./D3Graph.js";
-import { visualizeBFS } from "./functions/graphFunctions.js";
+import { visualizeBFS, visualizeDFS } from "./functions/graphFunctions.js";
 
 function GraphWrapper({
   graph,
@@ -18,26 +18,28 @@ function GraphWrapper({
   const [graphInstance, setGraphInstance] = useState(false);
   const [clicked, setClicked] = useState(false);
 
-  // when the user clicks the visualize button, trigger this function.
+  // when the user clicks the visualize button, trigger this function. visualize is a boolean that gets toggled on and off
   useEffect(() => {
     if (didMount.current == true) {
-      console.log(visualize);
+      // find random start
+      if (graphInstance.start == -1) {
+        graphInstance.setStart(Math.floor(Math.random() * graph.nodes.length));
+      }
+      //find random end
+      if (graphInstance.end == -1) {
+        let randomTarget = Math.floor(Math.random() * graph.nodes.length);
+        while (randomTarget == graphInstance.start) {
+          randomTarget = Math.floor(Math.random() * graph.nodes.length);
+        }
+        graphInstance.setEnd(randomTarget);
+      }
+      console.log("visualizing");
       if (algorithm == "bfs") {
-        if (graphInstance.start == -1) {
-          graphInstance.setStart(
-            Math.floor(Math.random() * graph.nodes.length)
-          );
-        }
-        if (graphInstance.end == -1) {
-          let randomTarget = Math.floor(Math.random() * graph.nodes.length);
-          while (randomTarget == graphInstance.start) {
-            randomTarget = Math.floor(Math.random() * graph.nodes.length);
-          }
-          graphInstance.setEnd(randomTarget);
-        }
-        console.log("visualizing");
-
         visualizeBFS(graph, graphInstance.start, graphInstance.end);
+
+        graphInstance.visualize();
+      } else if (algorithm == "dfs") {
+        visualizeDFS(graph, graphInstance.start, graphInstance.end);
 
         graphInstance.visualize();
       }

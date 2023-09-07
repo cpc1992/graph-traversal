@@ -22,7 +22,7 @@ function App() {
 
   const [visualize, setVisualize] = useState(false);
 
-  const [algorithm, setAlgorithm] = useState("bfs");
+  const [algorithm, setAlgorithm] = useState("dfs");
 
   useEffect(() => {
     // call create graph function to create a graph structure set it to the state

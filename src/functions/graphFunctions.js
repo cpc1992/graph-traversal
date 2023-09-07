@@ -45,7 +45,7 @@ export function createGraph(numNodes, connectAll) {
     // loop to numNodes, create node objects, create random connections
     for (let i = 0; i < numNodes; i++) {
         // create and append node object
-        newGraph.nodes.push({ id: i, level: 0, start: false, end: false });
+        newGraph.nodes.push({ id: i, level: 0, start: false, end: false, path: [] });
         if (numNodes > 1) {
             // create and push random connection - every node will have 1 random connection
             let randomTarget = Math.floor(Math.random() * numNodes);
@@ -196,73 +196,167 @@ export function connectComponents(graphStructure) {
     }
 }
 
+export function resetLevels(graphStructure) {
+    for (let edge of graphStructure.edges) {
+        edge.level = -1
+    }
+    for (let node of graphStructure.nodes) {
+        node.level = -1
+        node.path = []
+    }
+}
+
 //input a graph structure, edit the levels of the nodes and edges
 export function visualizeBFS(graphStructure, start, end) {
+
+    resetLevels(graphStructure)
+
     let visitedNodes = new Set()
     let visitedEdges = new Set()
 
-    // graphStructure.edges.map((m) => {
-    //     console.log(m)
-    // })
 
-    let bestPath = []
     let count = 0
     let queue = []
 
-    graphStructure.nodes[start].level = count
-
+    let root = graphStructure.nodes[start]
+    root.level = count
     count += 1
-
-    queue.push(graphStructure.nodes[start])
-    visitedNodes.add(start)
+    queue.push(root)
+    visitedNodes.add(root.id)
+    root.path = [root]
 
 
     while (queue.length > 0) {
         //pop off farthest left node from queue
-        let node = queue.shift()
+        let parent = queue.shift()
+
 
         //get connected edges of that node
-        let connectedEdges = graphStructure.edgemap[node.id.toString()]
+        let connectedEdges = graphStructure.edgemap[parent.id.toString()]
 
+        // iterate through children 
         for (let edge of connectedEdges) {
 
+            // pop this edge into the visited edges map and set its level 
             if (!visitedEdges.has(edge.id)) {
                 edge.level = count
                 count += 1
                 visitedEdges.add(edge.id)
             }
 
+            // The parent node is already in the visited map, these 2 if statement pop the OTHER NODE into the map. as well as set level 
             if (!visitedNodes.has(edge.source.id)) {
-                edge.source.level = count
+                let node = edge.source
+                node.level = count
                 count += 1
-                visitedNodes.add(edge.source.id)
-                queue.push(edge.source)
+                visitedNodes.add(node.id)
+                queue.push(node)
+                node.path = [...parent.path, edge, node]
+                if (node.end == true) {
+                    return
+                }
+
+
             }
+
             if (!visitedNodes.has(edge.target.id)) {
-                edge.target.level = count
+                let node = edge.target
+                node.level = count
                 count += 1
-                visitedNodes.add(edge.target.id)
-                queue.push(edge.target)
+                visitedNodes.add(node.id)
+                queue.push(node)
+                node.path = [...parent.path, edge, node]
+                if (node.end == true) {
+                    return
+                }
             }
-
-
-
-
 
         }
+    }
+}
+
+//input a graph structure, edit the levels of the nodes and edges
+export function visualizeDFS(graphStructure, start, end) {
+
+    resetLevels(graphStructure)
+
+    let count = 0
+
+    let visitedNodes = new Set()
+    let visitedEdges = new Set()
+
+    let stack = []
+
+    let root = graphStructure.nodes[start]
+    root.path.push(root)
+
+    stack.push([root, -1])
+
+    while (stack.length > 0) {
+
+        let [parentNode, parentEdge] = stack.pop()
 
 
 
+        //edge
+        if (parentEdge != -1) {
+            if (!visitedEdges.has(parentEdge.id)) {
+                parentEdge.level = count
+                count += 1
+                visitedEdges.add(parentEdge.id)
+            }
+        }
 
+        //node
+        if (parentNode != -1) {
+
+            if (!visitedNodes.has(parentNode.id)) {
+                parentNode.level = count
+                count += 1
+                visitedNodes.add(parentNode.id)
+                if (parentNode.end == true) {
+                    return
+                }
+            }
+
+
+            let childrenEdges = graphStructure.edgemap[parentNode.id.toString()]
+            for (let edge of childrenEdges) {
+
+                let childNode = edge.source
+                if (childNode.id == parentNode.id) childNode = edge.target
+
+                let nextOnStack = [-1, -1]
+                if (!visitedNodes.has(childNode.id)) {
+                    nextOnStack[0] = childNode
+                    childNode.path = [...parentNode.path, edge, childNode]
+                }
+                if (!visitedEdges.has(edge.id)) {
+                    nextOnStack[1] = edge
+                }
+                if (nextOnStack[0] != -1 || nextOnStack[1] != -1) {
+                    stack.push(nextOnStack)
+                }
+
+            }
+        }
 
     }
 
-    // console.log('=')
-    // graphStructure.edges.map((m) => {
-    //     console.log(m)
-    // })
-    // graphStructure.nodes.map((m) => {
-    //     console.log(m)
-    // })
-    // console.log(graphStructure)
+
+
+
+
+
+
+
+    visitedNodes.add(root.id)
+
+
+
 }
+
+
+
+
+

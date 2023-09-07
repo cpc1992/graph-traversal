@@ -200,7 +200,10 @@ class D3Graph {
       })
       .on("mouseout", function (d, i) {
 
-        d3.select(this).transition().duration(vis.shrinkDuration).attr("r", vis.nodeNormalSize);
+        d3.select(this)
+          .transition()
+          .duration(vis.shrinkDuration)
+          .attr("r", (d) => d.end ? vis.nodeBlowupSize : d.start ? vis.nodeBlowupSize : vis.nodeNormalSize);
       })
       .on("click", function (d, i) {
         // i cant get the function in graphwrapper.js to run every time the setClicked function is run. 
@@ -268,6 +271,9 @@ class D3Graph {
         .select(`#node-${vis.start}`)
         .attr('fill', vis.main)
         .attr("stroke", "white")
+        .transition()
+        .duration(vis.shrinkDuration)
+        .attr('r', vis.nodeNormalSize)
         .each((d) => { d.start = false })
 
       if (nodeNum == vis.start) { // if we are clicking the same one
@@ -280,6 +286,7 @@ class D3Graph {
           .select(`#node-${nodeNum}`)
           .attr('fill', vis.startColor)
           .attr("stroke", vis.startColor)
+          .attr('r', vis.nodeBlowupSize)
           .each((d) => { d.start = true })
 
         vis.start = nodeNum
@@ -290,6 +297,7 @@ class D3Graph {
         .select(`#node-${nodeNum}`)
         .attr('fill', vis.startColor)
         .attr("stroke", vis.startColor)
+        .attr('r', vis.nodeBlowupSize)
         .each((d) => { d.start = true })
       vis.start = nodeNum
 
@@ -303,12 +311,15 @@ class D3Graph {
     }
 
     if (vis.end !== -1) { // start is already selected
-
+      console.log('in here')
       // turn current one off
       vis.nodeGroup
         .select(`#node-${vis.end}`)
         .attr('fill', vis.main)
         .attr("stroke", "white")
+        .transition()
+        .duration(vis.shrinkDuration)
+        .attr('r', vis.nodeNormalSize)
         .each((d) => { d.end = false })
 
       if (nodeNum == vis.end) { // if we are clicking the same one
@@ -320,16 +331,18 @@ class D3Graph {
           .select(`#node-${nodeNum}`)
           .attr('fill', vis.endColor)
           .attr('stroke', vis.endColor)
+          .attr('r', vis.nodeBlowupSize)
           .each((d) => { d.end = true })
 
         vis.end = nodeNum
       }
     } else { // no start is clicked yet
-      // set the one were clicking to green and set vis.start
+      // set the one were clicking to red and set vis.end
       vis.nodeGroup
         .select(`#node-${nodeNum}`)
         .attr('fill', vis.endColor)
         .attr('stroke', vis.endColor)
+        .attr('r', vis.nodeBlowupSize)
         .each((d) => { d.end = true })
       vis.end = nodeNum
 
@@ -360,7 +373,26 @@ class D3Graph {
   }
 
   visualize() {
+
     let vis = this
+    let duration = 175
+    let lag = 10
+
+    vis.linkGroup
+      .selectAll('line')
+      .transition()
+      .duration(2000)
+      .attr('stroke', vis.main)
+      .attr("stroke-width", 1)
+
+    vis.nodeGroup
+      .selectAll('circle')
+      .transition()
+      .duration(2000)
+      .attr('fill', (d) => d.start ? vis.startColor : d.end ? vis.endColor : vis.main)
+      .attr('r', (d) => d.end ? vis.nodeBlowupSize : d.start ? vis.nodeBlowupSize : vis.nodeNormalSize);
+
+
 
     vis.nodeGroup
       .selectAll('circle')
@@ -368,14 +400,14 @@ class D3Graph {
       .on("mouseout", null)
       .on("click", null)
 
-    let duration = 175
-    let lag = 10
+
 
 
     vis.linkGroup
       .selectAll('line')
+      .filter((d) => d.level != -1)
       .transition()
-      .delay((d, i) => lag * d.level)
+      .delay((d) => lag * d.level)
       .duration(duration)
       .attr('stroke', 'yellow')
       .attr("stroke-width", 2)
@@ -387,49 +419,119 @@ class D3Graph {
 
     vis.nodeGroup
       .selectAll('circle')
+      .filter((d) => d.level != -1)
       .transition()
-      .delay((d, i) => lag * d.level)
+      .delay((d) => lag * d.level)
       .duration(duration)
       .attr('fill', 'yellow')
       .attr('r', vis.nodeBlowupSize)
       .transition()
       .delay(200)
       .duration(duration)
-      .attr('fill', (d, i) => d.start ? vis.startColor : d.end ? vis.endColor : vis.secondary)
-      .attr('r', vis.nodeNormalSize)
+      .attr('fill', (d) => d.start ? vis.startColor : d.end ? vis.endColor : vis.secondary)
+      .attr('r', (d) => d.end ? vis.nodeBlowupSize : d.start ? vis.nodeBlowupSize : vis.nodeNormalSize)
+      .on('end', (data) => {
+        if (data.end == true) {
+          vis.applyMouseOptions()
+          vis.animateBestPath(data.path)
+        }
+
+      })
+    vis.rotateColors()
 
 
 
-    setTimeout(() => {
-      console.log('done boii')
-      vis.nodeGroup
-        .selectAll('circle')
-        .on("mouseover", function (d, i) {
-          d3.select(this)
-            .transition()
-            .duration(vis.BlowupDuration)
-            .attr("r", () => vis.nodeBlowupSize)
-            .attr('style', 'cursor: pointer')
-        })
-        .on("mouseout", function (d, i) {
-          d3.select(this).transition().duration(vis.shrinkDuration).attr("r", vis.nodeNormalSize);
-        })
-        .on("click", function (d, i) {
-          // i cant get the function in graphwrapper.js to run every time the setClicked function is run. 
-          // so im getting the setClicked state item to a tuple including the current DATE. 
-          // this is so that the useEffect function will run every time
-          d3.select(this).attr("r", () => vis.nodeBlowupSize).each((node) => {
-            vis.setClicked([node.id, Date.now()])
-          })
-        })
-
-      vis.rotateColors()
-
-
-    }, lag * (vis.numNodes + vis.numEdges))
 
 
   }
+
+  animateBestPath(pathArray) {
+    let vis = this
+    let lag = 10
+    let duration = 100
+
+    vis.linkGroup
+      .selectAll('line')
+      .each((d, i) => d.level = -1)
+
+    vis.nodeGroup
+      .selectAll('circle')
+      .each((d, i) => d.level = -1)
+
+    for (let i = 0; i < pathArray.length; i++) {
+      pathArray[i].level = i
+    }
+
+    console.log(pathArray)
+
+    vis.linkGroup
+      .selectAll('line')
+      .filter((d) => d.level != -1)
+      .transition()
+      .delay((d) => lag * d.level)
+      .duration(duration)
+      .attr('stroke', 'yellow')
+      .attr("stroke-width", 2)
+      .transition()
+      .delay(200)
+      .duration(duration)
+    // .attr("stroke-width", 1)
+
+    vis.nodeGroup
+      .selectAll('circle')
+      .filter((d) => d.level != -1)
+      .transition()
+      .delay((d) => lag * d.level)
+      .duration(duration)
+      .attr('fill', (d) => d.start ? vis.startColor : d.end ? vis.endColor : 'yellow')
+      .attr('r', vis.nodeBlowupSize)
+      .transition()
+      .delay(200)
+      .duration(duration)
+      // .attr('fill', (d) => d.start ? vis.startColor : d.end ? vis.endColor : vis.secondary)
+      .attr('r', (d) => d.end ? vis.nodeBlowupSize : d.start ? vis.nodeBlowupSize : vis.nodeNormalSize);
+
+
+
+
+  }
+  removeMouseOptions() {
+    let vis = this
+    vis.nodeGroup
+      .selectAll('circle')
+      .on("mouseover", null)
+      .on("mouseout", null)
+      .on("click", null)
+  }
+
+  applyMouseOptions() {
+    let vis = this
+    vis.nodeGroup
+      .selectAll('circle')
+      .on("mouseover", function (d, i) {
+        d3.select(this)
+          .transition()
+          .duration(vis.BlowupDuration)
+          .attr("r", () => vis.nodeBlowupSize)
+          .attr('style', 'cursor: pointer')
+      })
+      .on("mouseout", function (d, i) {
+        d3.select(this)
+          .transition()
+          .duration(vis.shrinkDuration)
+          .attr("r", (d) => d.end ? vis.nodeBlowupSize : d.start ? vis.nodeBlowupSize : vis.nodeNormalSize);
+
+      })
+      .on("click", function (d, i) {
+        // i cant get the function in graphwrapper.js to run every time the setClicked function is run. 
+        // so im getting the setClicked state item to a tuple including the current DATE. 
+        // this is so that the useEffect function will run every time
+        d3.select(this).attr("r", () => vis.nodeBlowupSize).each((node) => {
+          vis.setClicked([node.id, Date.now()])
+        })
+      })
+  }
+
 
   rotateColors() {
     let vis = this
