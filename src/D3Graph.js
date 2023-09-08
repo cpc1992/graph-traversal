@@ -69,15 +69,19 @@ class D3Graph {
     vis.iterations = 30;
     vis.strength = -50;
 
+    vis.colorArray = [
+      "#FF5E5B",     // coral red
+      '#5fb8c2',     // teal
+      '#E49273',     // rose gold
+      "#8367C7",     // purple
+      '#E4E9B2',     // cream 
+      '#6369D1',     // opal blue
+      '#40F99B',     // lime green
+      '#F61067'      // hot pink
+    ]
 
-
-    vis.color1 = "#FF5E5B";       // coral red
-    vis.color2 = '#5fb8c2'        // teal
-    vis.color3 = "#8367C7";        // purple
-    vis.color4 = '#E49273'        // rose gold
-
-    vis.main = vis.color3
-    vis.secondary = vis.color2
+    vis.main = vis.colorArray[0]
+    vis.secondary = vis.colorArray[1]
     vis.rotateColors()
 
     vis.nodeNormalSize = 4;
@@ -357,6 +361,11 @@ class D3Graph {
         .select(`#node-${vis.start}`)
         .attr('fill', vis.main)
         .attr("stroke", "white")
+        .transition()
+        .duration(vis.shrinkDuration)
+        .attr('r', vis.nodeNormalSize)
+        .each((d) => { d.start = false })
+
     }
 
     if (vis.end != -1) {
@@ -365,6 +374,10 @@ class D3Graph {
         .select(`#node-${vis.end}`)
         .attr('fill', vis.main)
         .attr("stroke", "white")
+        .transition()
+        .duration(vis.shrinkDuration)
+        .attr('r', vis.nodeNormalSize)
+        .each((d) => { d.end = false })
     }
 
     vis.start = -1
@@ -372,25 +385,59 @@ class D3Graph {
 
   }
 
-  visualize() {
+  visualize(algorithm) {
 
     let vis = this
     let duration = 175
     let lag = 10
 
-    vis.linkGroup
-      .selectAll('line')
-      .transition()
-      .duration(2000)
-      .attr('stroke', vis.main)
-      .attr("stroke-width", 1)
 
-    vis.nodeGroup
-      .selectAll('circle')
-      .transition()
-      .duration(2000)
-      .attr('fill', (d) => d.start ? vis.startColor : d.end ? vis.endColor : vis.main)
-      .attr('r', (d) => d.end ? vis.nodeBlowupSize : d.start ? vis.nodeBlowupSize : vis.nodeNormalSize);
+    //clear the old info 
+    if (algorithm == 'idc') {
+
+      //dissappear the nodes and links. interrupt transitons
+      vis.linkGroup
+        .selectAll('line')
+        .interrupt()
+        .transition()
+        .duration(2000)
+        .attr('stroke', '#011632')
+        .attr("stroke-width", 1)
+
+      vis.nodeGroup
+        .selectAll('circle')
+        .interrupt()
+        .transition()
+        .duration(2000)
+        .attr('fill', '#011632')
+        .attr('r', (d) => d.end ? vis.nodeBlowupSize : d.start ? vis.nodeBlowupSize : vis.nodeNormalSize)
+        .attr("stroke", '#011632');
+
+
+
+
+    } else {
+      //just reset them 
+      vis.linkGroup
+        .selectAll('line')
+        .transition()
+        .duration(2000)
+        .attr('stroke', vis.main)
+        .attr("stroke-width", 1)
+
+      vis.nodeGroup
+        .selectAll('circle')
+        .transition()
+        .duration(2000)
+        .attr('fill', (d) => d.start ? vis.startColor : d.end ? vis.endColor : vis.main)
+        .attr('r', (d) => d.end ? vis.nodeBlowupSize : d.start ? vis.nodeBlowupSize : vis.nodeNormalSize)
+        .attr("stroke", 'white');
+    }
+
+
+
+
+
 
 
 
@@ -400,6 +447,7 @@ class D3Graph {
       .on("mouseout", null)
       .on("click", null)
 
+    let colorRandomizer = Math.floor(Math.random() * 25)
 
 
 
@@ -414,8 +462,25 @@ class D3Graph {
       .transition()
       .delay(200)
       .duration(duration)
-      .attr('stroke', vis.secondary)
+      .attr('stroke', (d) => {
+
+        if (algorithm == 'idc') {
+          return vis.colorArray[(colorRandomizer + d.path[0]) % vis.colorArray.length]
+        } else {
+          return vis.secondary
+        }
+
+      })
       .attr("stroke-width", 1)
+
+
+    let numVisitedNodes = vis.nodeGroup
+      .selectAll('circle')
+      .filter((d) => d.level != -1)
+      .size()
+
+    console.log(numVisitedNodes)
+    let count = 0
 
     vis.nodeGroup
       .selectAll('circle')
@@ -428,20 +493,32 @@ class D3Graph {
       .transition()
       .delay(200)
       .duration(duration)
-      .attr('fill', (d) => d.start ? vis.startColor : d.end ? vis.endColor : vis.secondary)
-      .attr('r', (d) => d.end ? vis.nodeBlowupSize : d.start ? vis.nodeBlowupSize : vis.nodeNormalSize)
-      .on('end', (data) => {
-        if (data.end == true) {
-          vis.applyMouseOptions()
-          vis.animateBestPath(data.path)
+      .attr('fill', (d) => {
+        if (d.start == true) {
+          return vis.startColor
+        } else if (d.end == true) {
+          return vis.endColor
+        } else if (algorithm == 'idc') {
+          vis.secondary = vis.colorArray[colorRandomizer % vis.colorArray.length]
+          return vis.colorArray[(colorRandomizer + d.path[0]) % vis.colorArray.length]
+        } else {
+          return vis.secondary
         }
-
       })
+      .attr('r', (d) => d.end ? vis.nodeBlowupSize : d.start ? vis.nodeBlowupSize : vis.nodeNormalSize)
+      .attr("stroke", 'white')
+      .on('end', (data, i) => {
+        count += 1
+        if (count == numVisitedNodes) {
+          console.log('done')
+          vis.applyMouseOptions()
+          if (data.end == true && (algorithm == 'dfs' || algorithm == 'bfs')) {
+            vis.animateBestPath(data.path)
+          }
+        }
+      })
+
     vis.rotateColors()
-
-
-
-
 
   }
 
@@ -534,26 +611,48 @@ class D3Graph {
 
 
   rotateColors() {
+
+    // 0  "#FF5E5B",     // coral red 
+    // 1  '#5fb8c2',     // teal
+    // 2  '#E49273',     // rose gold
+    // 3  "#8367C7",     // purple
+    // 4  '#E4E9B2',     // cream 
+    // 5  '#6369D1',     // opal blue
+    // 6  '#40F99B',     // lime green
+    // 7  '#F61067'      // hot pink
+
     let vis = this
     let options
     vis.main = vis.secondary
     switch (vis.main) {
-      case vis.color1: // coral - teal, purple
-        options = [vis.color2, vis.color3]
+      case vis.colorArray[0]: // coral 
+        options = [1, 3, 4, 5, 6]
         break
-      case vis.color2: // teal - anything 
-        options = [vis.color1, vis.color3, vis.color4]
+      case vis.colorArray[1]: // teal 
+        options = [0, 2, 3, 4, 5, 7]
         break
-      case vis.color3: // purple - anything 
-        options = [vis.color1, vis.color2, vis.color4]
+      case vis.colorArray[2]: // rose gold 
+        options = [1, 3, 5, 6, 7]
         break
-      case vis.color4: // rose gold - teal, purple 
-        options = [vis.color2, vis.color3]
+      case vis.colorArray[3]: // purple
+        options = [0, 1, 2, 4, 6, 7]
+        break
+      case vis.colorArray[4]: // cream
+        options = [0, 1, 3, 5, 6, 7]
+        break
+      case vis.colorArray[5]: // opal blue
+        options = [0, 1, 2, 3, 4, 6, 7]
+        break
+      case vis.colorArray[6]: // lime green
+        options = [0, 2, 3, 4, 5, 7]
+        break
+      case vis.colorArray[7]: // hot pink 
+        options = [1, 2, 3, 4, 5, 6]
         break
     }
 
     let randIndex = Math.floor(Math.random() * options.length)
-    vis.secondary = options[randIndex]
+    vis.secondary = vis.colorArray[options[randIndex]]
 
   }
 }

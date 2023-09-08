@@ -129,6 +129,18 @@ function ControlPanel({
             />
             Depth First Search
           </label>
+
+          <label htmlFor="idc-radio">
+            <input
+              id="idc-radio"
+              type="radio"
+              value="idc"
+              name="algoRadioGroup"
+              checked={algorithm === "idc"}
+              onChange={onAlgoChange}
+            />
+            Identify Components
+          </label>
         </div>
         <a
           className="ControlPanel-button"

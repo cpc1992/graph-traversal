@@ -1,6 +1,10 @@
 import { useState, useRef, useEffect } from "react";
 import D3Graph from "./D3Graph.js";
-import { visualizeBFS, visualizeDFS } from "./functions/graphFunctions.js";
+import {
+  visualizeBFS,
+  visualizeDFS,
+  visualizeIDC,
+} from "./functions/graphFunctions.js";
 
 function GraphWrapper({
   graph,
@@ -36,12 +40,14 @@ function GraphWrapper({
       console.log("visualizing");
       if (algorithm == "bfs") {
         visualizeBFS(graph, graphInstance.start, graphInstance.end);
-
-        graphInstance.visualize();
+        graphInstance.visualize("bfs");
       } else if (algorithm == "dfs") {
         visualizeDFS(graph, graphInstance.start, graphInstance.end);
-
-        graphInstance.visualize();
+        graphInstance.visualize("dfs");
+      } else if (algorithm == "idc") {
+        graphInstance.clearStartEnd();
+        visualizeIDC(graph, graphInstance.start);
+        graphInstance.visualize("idc");
       }
     }
   }, [visualize]);

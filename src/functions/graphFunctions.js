@@ -56,6 +56,7 @@ export function createGraph(numNodes, connectAll) {
             edgeObj.source = i;
             edgeObj.target = randomTarget;
             edgeObj.id = `${edgeObj.source}-${edgeObj.target}`
+            edgeObj.path = []
 
             // Add edge
             newGraph.edges.push(edgeObj);
@@ -199,6 +200,7 @@ export function connectComponents(graphStructure) {
 export function resetLevels(graphStructure) {
     for (let edge of graphStructure.edges) {
         edge.level = -1
+        edge.path = []
     }
     for (let node of graphStructure.nodes) {
         node.level = -1
@@ -227,12 +229,11 @@ export function visualizeBFS(graphStructure, start, end) {
 
 
     while (queue.length > 0) {
-        //pop off farthest left node from queue
-        let parent = queue.shift()
-
+        //pop off farthest left node from queue 
+        let parentNode = queue.shift()
 
         //get connected edges of that node
-        let connectedEdges = graphStructure.edgemap[parent.id.toString()]
+        let connectedEdges = graphStructure.edgemap[parentNode.id.toString()]
 
         // iterate through children 
         for (let edge of connectedEdges) {
@@ -244,32 +245,24 @@ export function visualizeBFS(graphStructure, start, end) {
                 visitedEdges.add(edge.id)
             }
 
-            // The parent node is already in the visited map, these 2 if statement pop the OTHER NODE into the map. as well as set level 
-            if (!visitedNodes.has(edge.source.id)) {
-                let node = edge.source
-                node.level = count
+            // get the child node 
+            let childNode = edge.source
+            if (childNode.id == parentNode.id) childNode = edge.target
+
+            // if we havent visited the child node, visit him and push him onto the queue
+            if (!visitedNodes.has(childNode.id)) {
+                childNode.level = count
                 count += 1
-                visitedNodes.add(node.id)
-                queue.push(node)
-                node.path = [...parent.path, edge, node]
-                if (node.end == true) {
-                    return
-                }
-
-
-            }
-
-            if (!visitedNodes.has(edge.target.id)) {
-                let node = edge.target
-                node.level = count
-                count += 1
-                visitedNodes.add(node.id)
-                queue.push(node)
-                node.path = [...parent.path, edge, node]
-                if (node.end == true) {
+                visitedNodes.add(childNode.id)
+                queue.push(childNode)
+                childNode.path = [...parentNode.path, edge, childNode]
+                // if we found our target - return
+                if (childNode.end == true) {
                     return
                 }
             }
+
+
 
         }
     }
@@ -287,18 +280,17 @@ export function visualizeDFS(graphStructure, start, end) {
 
     let stack = []
 
+    // push root onto stack
     let root = graphStructure.nodes[start]
     root.path.push(root)
-
     stack.push([root, -1])
 
     while (stack.length > 0) {
 
+        // pop the last node and edge from the stack
         let [parentNode, parentEdge] = stack.pop()
 
-
-
-        //edge
+        // EDGE - for the edge, if we havent visited it, add it to visited and add level 
         if (parentEdge != -1) {
             if (!visitedEdges.has(parentEdge.id)) {
                 parentEdge.level = count
@@ -307,25 +299,29 @@ export function visualizeDFS(graphStructure, start, end) {
             }
         }
 
-        //node
+        //NODE
         if (parentNode != -1) {
-
+            // if we havent visited the node, add it to visited and add level 
             if (!visitedNodes.has(parentNode.id)) {
                 parentNode.level = count
                 count += 1
                 visitedNodes.add(parentNode.id)
+                // if we've reached our target, return 
                 if (parentNode.end == true) {
                     return
                 }
             }
 
-
+            // get all edges connected to the parent and iterate through them
             let childrenEdges = graphStructure.edgemap[parentNode.id.toString()]
+
             for (let edge of childrenEdges) {
 
+                // get the child node 
                 let childNode = edge.source
                 if (childNode.id == parentNode.id) childNode = edge.target
 
+                // if we find a edge or node that we havent visited, push them onto the stack.
                 let nextOnStack = [-1, -1]
                 if (!visitedNodes.has(childNode.id)) {
                     nextOnStack[0] = childNode
@@ -342,16 +338,87 @@ export function visualizeDFS(graphStructure, start, end) {
         }
 
     }
+}
+
+export function visualizeIDC(graphStructure, start) {
+
+    resetLevels(graphStructure)
 
 
 
+    let visitedNodes = new Set()
+    let visitedEdges = new Set()
 
+    // same dfs function but without the path processing and uses universal visited lists
+    function subDFS(nodeNum, visitedNodes, visitedEdges, componentNumber) {
 
+        let count = 0
+        let stack = []
 
+        // push root onto stack
+        let root = graphStructure.nodes[nodeNum]
+        stack.push([root, -1])
 
+        while (stack.length > 0) {
 
-    visitedNodes.add(root.id)
+            // pop the last node and edge from the stack
+            let [parentNode, parentEdge] = stack.pop()
 
+            // EDGE - for the edge, if we havent visited it, add it to visited and add level 
+            if (parentEdge != -1) {
+                if (!visitedEdges.has(parentEdge.id)) {
+                    parentEdge.level = count
+                    parentEdge.path.push(componentNumber)
+                    count += 1
+                    visitedEdges.add(parentEdge.id)
+                }
+            }
+
+            //NODE
+            if (parentNode != -1) {
+                // if we havent visited the node, add it to visited and add level 
+                if (!visitedNodes.has(parentNode.id)) {
+                    parentNode.level = count
+                    parentNode.path.push(componentNumber)
+                    count += 1
+                    visitedNodes.add(parentNode.id)
+                }
+
+                // get all edges connected to the parent and iterate through them
+                let childrenEdges = graphStructure.edgemap[parentNode.id.toString()]
+
+                for (let edge of childrenEdges) {
+
+                    // get the child node 
+                    let childNode = edge.source
+                    if (childNode.id == parentNode.id) childNode = edge.target
+
+                    // if we find a edge or node that we havent visited, push them onto the stack.
+                    let nextOnStack = [-1, -1]
+                    if (!visitedNodes.has(childNode.id)) {
+                        nextOnStack[0] = childNode
+                    }
+                    if (!visitedEdges.has(edge.id)) {
+                        nextOnStack[1] = edge
+                    }
+                    if (nextOnStack[0] != -1 || nextOnStack[1] != -1) {
+                        stack.push(nextOnStack)
+                    }
+
+                }
+            }
+
+        }
+    }
+
+    let componentNumber = 0
+    for (let node of graphStructure.nodes) {
+        if (!visitedNodes.has(node.id)) {
+
+            subDFS(node.id, visitedNodes, visitedEdges, componentNumber)
+            componentNumber += 1
+        }
+    }
 
 
 }
