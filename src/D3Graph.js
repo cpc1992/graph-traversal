@@ -1,13 +1,11 @@
 import * as d3 from "d3";
 
-let width = 1500;
-let height = 1500;
-// const width = 900;
-// const height = 900;
-
 class D3Graph {
   constructor(element, graphStructure, setClicked) {
     const vis = this;
+
+    vis.height = 1000
+    vis.width = 1000
 
     vis.start = -1
     vis.end = -1
@@ -21,34 +19,32 @@ class D3Graph {
     vis.BlowupDuration = 100
     vis.shrinkDuration = 1000
 
-
-
     vis.setClicked = setClicked
 
     let horizontalMultiplier = .1
 
     if (vis.numNodes < 100) {
-      height = 500
+      vis.height = 500
     } else if (vis.numNodes < 200) {
-      height = 600
+      vis.height = 600
     } else if (vis.numNodes < 300) {
-      height = 700
+      vis.height = 700
     } else if (vis.numNodes < 400) {
-      height = 800
+      vis.height = 800
     } else if (vis.numNodes < 500) {
-      height = 900
+      vis.height = 900
     } else if (vis.numNodes < 600) {
-      height = 1000
+      vis.height = 1000
     } else if (vis.numNodes < 700) {
-      height = 1100
+      vis.height = 1100
     } else if (vis.numNodes < 800) {
-      height = 1200
+      vis.height = 1200
     } else if (vis.numNodes < 900) {
-      height = 1250
+      vis.height = 1250
     } else {
-      height = 1400
+      vis.height = 1400
     }
-    width = height * 1.25
+    vis.width = vis.height * 1.25
 
 
 
@@ -57,8 +53,7 @@ class D3Graph {
     vis.svg = d3
       .select(element)
       .append("svg")
-      .attr("viewBox", [-width / 2, -height / 2, width, height])
-      // .attr("viewBox", [0,0, width*zoom, height*zoom])
+      .attr("viewBox", [-vis.width / 2, -vis.height / 2, vis.width, vis.height])
       .attr("style", "overflow: visible")
 
     // speficications for grid graph - try making links smaller
@@ -74,14 +69,14 @@ class D3Graph {
       '#5fb8c2',     // teal
       '#E49273',     // rose gold
       "#8367C7",     // purple
-      '#E4E9B2',     // cream 
-      '#6369D1',     // opal blue
+      '#7C9299',    // grey 
+      '#0075ff',     // steel blue
       '#40F99B',     // lime green
       '#F61067'      // hot pink
     ]
 
-    vis.main = vis.colorArray[0]
-    vis.secondary = vis.colorArray[1]
+    vis.mainColor = vis.colorArray[Math.floor(Math.random() * vis.colorArray.length)]
+    vis.secondaryColor = vis.colorArray[Math.floor(Math.random() * vis.colorArray.length)]
     vis.rotateColors()
 
     vis.nodeNormalSize = 4;
@@ -143,7 +138,7 @@ class D3Graph {
           result.transition()
             .delay((d, i) => d.level * lag)
             .duration(dur)
-            .attr("stroke", vis.main)
+            .attr("stroke", vis.mainColor)
             .attr("stroke-width", 1)
             .attr('id', (d, i) => `edge-${d.source.id}-${d.target.id}`)
 
@@ -168,7 +163,7 @@ class D3Graph {
           result.transition()
             .delay((d, i) => d.level * lag)
             .duration(dur)
-            .attr("fill", vis.main)
+            .attr("fill", vis.mainColor)
             .attr("r", vis.nodeNormalSize)
             .attr('id', (d, i) => `node-${d.id}`)
             .attr("stroke", "white")
@@ -179,7 +174,7 @@ class D3Graph {
 
           return result
         },
-        (update) => update.attr('fill', vis.main),
+        (update) => update.attr('fill', vis.mainColor),
         (exit) => exit.remove()
       )
 
@@ -273,7 +268,7 @@ class D3Graph {
       // turn current one off
       vis.nodeGroup
         .select(`#node-${vis.start}`)
-        .attr('fill', vis.main)
+        .attr('fill', vis.mainColor)
         .attr("stroke", "white")
         .transition()
         .duration(vis.shrinkDuration)
@@ -315,11 +310,10 @@ class D3Graph {
     }
 
     if (vis.end !== -1) { // start is already selected
-      console.log('in here')
       // turn current one off
       vis.nodeGroup
         .select(`#node-${vis.end}`)
-        .attr('fill', vis.main)
+        .attr('fill', vis.mainColor)
         .attr("stroke", "white")
         .transition()
         .duration(vis.shrinkDuration)
@@ -359,7 +353,7 @@ class D3Graph {
     if (vis.start != -1) {
       vis.nodeGroup
         .select(`#node-${vis.start}`)
-        .attr('fill', vis.main)
+        .attr('fill', vis.mainColor)
         .attr("stroke", "white")
         .transition()
         .duration(vis.shrinkDuration)
@@ -372,7 +366,7 @@ class D3Graph {
 
       vis.nodeGroup
         .select(`#node-${vis.end}`)
-        .attr('fill', vis.main)
+        .attr('fill', vis.mainColor)
         .attr("stroke", "white")
         .transition()
         .duration(vis.shrinkDuration)
@@ -395,7 +389,7 @@ class D3Graph {
     //clear the old info 
     if (algorithm == 'idc') {
 
-      //dissappear the nodes and links. interrupt transitons
+      //for identifying components, dissappear the nodes and links. interrupt transitons
       vis.linkGroup
         .selectAll('line')
         .interrupt()
@@ -413,48 +407,49 @@ class D3Graph {
         .attr('r', (d) => d.end ? vis.nodeBlowupSize : d.start ? vis.nodeBlowupSize : vis.nodeNormalSize)
         .attr("stroke", '#011632');
 
-
-
-
     } else {
-      //just reset them 
+      //if we are switching to a search algorithm, just fade everything into the secondary color
       vis.linkGroup
         .selectAll('line')
         .transition()
         .duration(2000)
-        .attr('stroke', vis.main)
+        .attr('stroke', vis.mainColor)
         .attr("stroke-width", 1)
 
       vis.nodeGroup
         .selectAll('circle')
         .transition()
         .duration(2000)
-        .attr('fill', (d) => d.start ? vis.startColor : d.end ? vis.endColor : vis.main)
+        .attr('fill', (d) => d.start ? vis.startColor : d.end ? vis.endColor : vis.mainColor)
         .attr('r', (d) => d.end ? vis.nodeBlowupSize : d.start ? vis.nodeBlowupSize : vis.nodeNormalSize)
-        .attr("stroke", 'white');
+        .attr("stroke", 'white')
+        .attr("stroke-width", 1);
     }
 
+    vis.simulation.alphaTarget(1)
+    setTimeout(() => { vis.simulation.alphaTarget(0) }, 500)
 
-
-
-
-
-
-
+    // turn off mouse options on all circles
     vis.nodeGroup
       .selectAll('circle')
       .on("mouseover", null)
       .on("mouseout", null)
       .on("click", null)
 
+    // choose a random color and set a count variable - used for coloring different components
     let colorRandomizer = Math.floor(Math.random() * 25)
+    let count = 0
+    // get the number of nodes that are being animated - used for coloring different components
+    let numVisitedNodes = vis.nodeGroup
+      .selectAll('circle')
+      .filter((d) => d.level != -1)
+      .size()
 
-
-
+    // animate links for visualization 
     vis.linkGroup
       .selectAll('line')
       .filter((d) => d.level != -1)
-      .transition()
+      .transition() // transition to active yellow
       .delay((d) => lag * d.level)
       .duration(duration)
       .attr('stroke', 'yellow')
@@ -465,32 +460,28 @@ class D3Graph {
       .attr('stroke', (d) => {
 
         if (algorithm == 'idc') {
-          return vis.colorArray[(colorRandomizer + d.path[0]) % vis.colorArray.length]
+          return vis.colorArray[(colorRandomizer + d.componentColor) % vis.colorArray.length]
+        } else if (algorithm == 'dac' && d.isCycleEdge == true) {
+          return 'yellow'
         } else {
-          return vis.secondary
+          return vis.secondaryColor
         }
 
       })
       .attr("stroke-width", 1)
 
 
-    let numVisitedNodes = vis.nodeGroup
-      .selectAll('circle')
-      .filter((d) => d.level != -1)
-      .size()
 
-    console.log(numVisitedNodes)
-    let count = 0
-
+    // anime nodes for visualization
     vis.nodeGroup
       .selectAll('circle')
       .filter((d) => d.level != -1)
-      .transition()
+      .transition() // transition to active yellow
       .delay((d) => lag * d.level)
       .duration(duration)
       .attr('fill', 'yellow')
       .attr('r', vis.nodeBlowupSize)
-      .transition()
+      .transition() // transiton back to secondary color
       .delay(200)
       .duration(duration)
       .attr('fill', (d) => {
@@ -499,25 +490,32 @@ class D3Graph {
         } else if (d.end == true) {
           return vis.endColor
         } else if (algorithm == 'idc') {
-          vis.secondary = vis.colorArray[colorRandomizer % vis.colorArray.length]
-          return vis.colorArray[(colorRandomizer + d.path[0]) % vis.colorArray.length]
-        } else {
-          return vis.secondary
+          vis.secondaryColor = vis.colorArray[colorRandomizer % vis.colorArray.length]
+          return vis.colorArray[(colorRandomizer + d.componentColor) % vis.colorArray.length]
+        } else if (algorithm == 'dac' && d.isCycleEdge == true) {
+          return 'yellow'
+        }
+        else {
+          return vis.secondaryColor
         }
       })
       .attr('r', (d) => d.end ? vis.nodeBlowupSize : d.start ? vis.nodeBlowupSize : vis.nodeNormalSize)
       .attr("stroke", 'white')
+      .attr("stroke-width", 1)
       .on('end', (data, i) => {
         count += 1
+        // After the last transition call this code
         if (count == numVisitedNodes) {
-          console.log('done')
           vis.applyMouseOptions()
           if (data.end == true && (algorithm == 'dfs' || algorithm == 'bfs')) {
+
             vis.animateBestPath(data.path)
           }
         }
       })
 
+
+    // rotate the colors
     vis.rotateColors()
 
   }
@@ -539,7 +537,6 @@ class D3Graph {
       pathArray[i].level = i
     }
 
-    console.log(pathArray)
 
     vis.linkGroup
       .selectAll('line')
@@ -616,43 +613,43 @@ class D3Graph {
     // 1  '#5fb8c2',     // teal
     // 2  '#E49273',     // rose gold
     // 3  "#8367C7",     // purple
-    // 4  '#E4E9B2',     // cream 
+    // 4  '#F9F5FF',     // grey 
     // 5  '#6369D1',     // opal blue
     // 6  '#40F99B',     // lime green
     // 7  '#F61067'      // hot pink
 
     let vis = this
     let options
-    vis.main = vis.secondary
-    switch (vis.main) {
+    vis.mainColor = vis.secondaryColor
+    switch (vis.mainColor) {
       case vis.colorArray[0]: // coral 
         options = [1, 3, 4, 5, 6]
         break
       case vis.colorArray[1]: // teal 
-        options = [0, 2, 3, 4, 5, 7]
+        options = [0, 2, 3, 7]
         break
       case vis.colorArray[2]: // rose gold 
-        options = [1, 3, 5, 6, 7]
+        options = [1, 3, 5, 6]
         break
       case vis.colorArray[3]: // purple
-        options = [0, 1, 2, 4, 6, 7]
+        options = [0, 1, 2, 6, 7]
         break
-      case vis.colorArray[4]: // cream
-        options = [0, 1, 3, 5, 6, 7]
+      case vis.colorArray[4]: // grey
+        options = [0, 5, 6, 7]
         break
-      case vis.colorArray[5]: // opal blue
-        options = [0, 1, 2, 3, 4, 6, 7]
+      case vis.colorArray[5]: // steel blue
+        options = [0, 2, 4, 6, 7]
         break
       case vis.colorArray[6]: // lime green
         options = [0, 2, 3, 4, 5, 7]
         break
       case vis.colorArray[7]: // hot pink 
-        options = [1, 2, 3, 4, 5, 6]
+        options = [1, 3, 4, 5, 6]
         break
     }
 
     let randIndex = Math.floor(Math.random() * options.length)
-    vis.secondary = vis.colorArray[options[randIndex]]
+    vis.secondaryColor = vis.colorArray[options[randIndex]]
 
   }
 }

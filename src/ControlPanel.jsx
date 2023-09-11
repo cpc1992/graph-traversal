@@ -18,6 +18,7 @@ function ControlPanel({
 }) {
   const [sliderVal, setSliderVal] = useState(numNodes);
   const onAlgoChange = (e) => {
+    window.localStorage.setItem("localAlgorithm", e.target.value);
     setAlgorithm(e.target.value);
   };
 
@@ -139,7 +140,19 @@ function ControlPanel({
               checked={algorithm === "idc"}
               onChange={onAlgoChange}
             />
-            Identify Components
+            Identify Subgraphs
+          </label>
+
+          <label htmlFor="dac-radio">
+            <input
+              id="dac-radio"
+              type="radio"
+              value="dac"
+              name="algoRadioGroup"
+              checked={algorithm === "dac"}
+              onChange={onAlgoChange}
+            />
+            Detect All Cycles
           </label>
         </div>
         <a

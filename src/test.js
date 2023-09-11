@@ -1,8 +1,14 @@
 
-let visited = new Set()
-visited.add(0)
-visited.add(1)
+let one = {
+    vis: new Set(),
+    three: false
+}
 
-let num = 7
-console.log(visited)
-console.log(visited.has(num))
+let visited = one.vis
+
+
+
+visited.add('asasas')
+visited.add(3)
+
+console.log(one.vis)

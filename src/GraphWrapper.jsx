@@ -4,6 +4,7 @@ import {
   visualizeBFS,
   visualizeDFS,
   visualizeIDC,
+  visualizeDAC,
 } from "./functions/graphFunctions.js";
 
 function GraphWrapper({
@@ -26,18 +27,21 @@ function GraphWrapper({
   useEffect(() => {
     if (didMount.current == true) {
       // find random start
-      if (graphInstance.start == -1) {
-        graphInstance.setStart(Math.floor(Math.random() * graph.nodes.length));
+      if (algorithm == "dfs" || algorithm == "bfs") {
+        if (graphInstance.start == -1) {
+          graphInstance.setStart(
+            Math.floor(Math.random() * graph.nodes.length)
+          );
+        }
       }
       //find random end
-      if (graphInstance.end == -1) {
-        let randomTarget = Math.floor(Math.random() * graph.nodes.length);
-        while (randomTarget == graphInstance.start) {
-          randomTarget = Math.floor(Math.random() * graph.nodes.length);
-        }
-        graphInstance.setEnd(randomTarget);
-      }
-      console.log("visualizing");
+      // if (graphInstance.end == -1) {
+      //   let randomTarget = Math.floor(Math.random() * graph.nodes.length);
+      //   while (randomTarget == graphInstance.start) {
+      //     randomTarget = Math.floor(Math.random() * graph.nodes.length);
+      //   }
+      //   graphInstance.setEnd(randomTarget);
+      // }
       if (algorithm == "bfs") {
         visualizeBFS(graph, graphInstance.start, graphInstance.end);
         graphInstance.visualize("bfs");
@@ -46,8 +50,12 @@ function GraphWrapper({
         graphInstance.visualize("dfs");
       } else if (algorithm == "idc") {
         graphInstance.clearStartEnd();
-        visualizeIDC(graph, graphInstance.start);
+        visualizeIDC(graph);
         graphInstance.visualize("idc");
+      } else if (algorithm == "dac") {
+        graphInstance.clearStartEnd();
+        visualizeDAC(graph);
+        graphInstance.visualize("dac");
       }
     }
   }, [visualize]);
