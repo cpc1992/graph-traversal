@@ -77,6 +77,22 @@ body {
   z-index: 100;
 }
 
-svg {
-  /* background-color: grey; */
+.App-title {
+  text-align: center;
+  margin-top: 15px;
+  margin-bottom: 15px;
+  font-size: 2rem;
+  font-weight: 300;
+  letter-spacing: 4px;
+}
+
+@media (max-width: 1315px) {
+  .App-content .content:first-child {
+    order: 1;
+  }
+
+  .App-content {
+    flex-direction: column;
+    /* align-items: center; */
+  }
 }

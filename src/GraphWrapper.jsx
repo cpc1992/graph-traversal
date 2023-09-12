@@ -16,6 +16,7 @@ function GraphWrapper({
   clearClicked,
   algorithm,
   visualize,
+  setStats,
 }) {
   const graphDiv = useRef(null);
   const didMount = useRef(false);
@@ -34,28 +35,28 @@ function GraphWrapper({
           );
         }
       }
-      //find random end
-      // if (graphInstance.end == -1) {
-      //   let randomTarget = Math.floor(Math.random() * graph.nodes.length);
-      //   while (randomTarget == graphInstance.start) {
-      //     randomTarget = Math.floor(Math.random() * graph.nodes.length);
-      //   }
-      //   graphInstance.setEnd(randomTarget);
-      // }
       if (algorithm == "bfs") {
-        visualizeBFS(graph, graphInstance.start, graphInstance.end);
-        graphInstance.visualize("bfs");
+        let result = visualizeBFS(
+          graph,
+          graphInstance.start,
+          graphInstance.end
+        );
+        graphInstance.visualize("bfs", result);
       } else if (algorithm == "dfs") {
-        visualizeDFS(graph, graphInstance.start, graphInstance.end);
-        graphInstance.visualize("dfs");
+        let result = visualizeDFS(
+          graph,
+          graphInstance.start,
+          graphInstance.end
+        );
+        graphInstance.visualize("dfs", result);
       } else if (algorithm == "idc") {
         graphInstance.clearStartEnd();
-        visualizeIDC(graph);
-        graphInstance.visualize("idc");
+        let result = visualizeIDC(graph);
+        graphInstance.visualize("idc", result);
       } else if (algorithm == "dac") {
         graphInstance.clearStartEnd();
-        visualizeDAC(graph);
-        graphInstance.visualize("dac");
+        let result = visualizeDAC(graph);
+        graphInstance.visualize("dac", result);
       }
     }
   }, [visualize]);
@@ -65,7 +66,9 @@ function GraphWrapper({
     if (didMount.current == false) {
       didMount.current = true;
     } else {
-      setGraphInstance(new D3Graph(graphDiv.current, graph, setClicked));
+      setGraphInstance(
+        new D3Graph(graphDiv.current, graph, setClicked, setStats)
+      );
     }
   }, [graph]);
 
@@ -116,7 +119,7 @@ function GraphWrapper({
 
   return (
     <>
-      <div className="GraphWrapper-main" ref={graphDiv}></div>
+      <div className="GraphWrapper-main content" ref={graphDiv}></div>
     </>
   );
 }

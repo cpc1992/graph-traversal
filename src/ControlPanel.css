@@ -4,7 +4,7 @@
   border-radius: 10px;
   display: flex;
   flex-direction: column;
-  margin: 20px;
+  padding-right: 50px;
   /* max-width: 400px; */
   height: 1000px;
 }
@@ -12,7 +12,7 @@
 .ControlPanel-generator {
   display: flex;
   flex-direction: column;
-  margin: 20px;
+
   padding: 10px;
   /* border: var(--redborder); */
   gap: 20px;
@@ -20,7 +20,7 @@
 .ControlPanel-startEndSelector {
   display: flex;
   flex-direction: column;
-  margin: 20px;
+
   padding: 10px;
   /* border: var(--redborder); */
   gap: 20px;
@@ -28,7 +28,7 @@
 .ControlPanel-algorithm {
   display: flex;
   flex-direction: column;
-  margin: 20px;
+
   padding: 10px;
   /* border: var(--redborder); */
   gap: 20px;
@@ -36,6 +36,7 @@
 .ControlPanel-algochoice {
   display: flex;
   flex-direction: column;
+  gap: 10px;
 }
 
 .ControlPanel-button {
@@ -48,6 +49,8 @@
   text-align: center;
   transition: all 0.2s;
   user-select: none;
+  font-weight: 300;
+  letter-spacing: 1px;
 }
 
 .ControlPanel-button:hover {
@@ -66,4 +69,76 @@
   letter-spacing: 2px;
   transform: scale(0.98);
   background-color: rgb(217, 219, 221, 0.1);
+}
+
+.ControlPanel-tabs {
+  display: flex;
+  flex-direction: row;
+}
+.ControlPanel-tab {
+  width: 50%;
+}
+
+.ControlPanel-steptitle {
+  font-weight: 300;
+  font-size: 1.5rem;
+  letter-spacing: 2px;
+}
+.ControlPanel-text-chosen {
+  font-size: 1rem;
+  /* font-weight: 300; */
+  letter-spacing: 3px;
+  font-weight: 300;
+}
+
+.ControlPanel-input {
+  margin-right: 15px;
+}
+
+.ControlPanel-smalltext {
+  font-size: 1rem;
+  font-weight: 300;
+  letter-spacing: 1px;
+}
+.ControlPanel-center {
+  text-align: center;
+  padding-bottom: 10px;
+  position: relative;
+}
+.ControlPanel-center:before {
+  content: "";
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  height: 1px;
+  margin: auto;
+  width: 95%; /* or 100px */
+  border-bottom: 1px solid var(--textcolor);
+}
+.ControlPanel-stats {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+@media (max-width: 1315px) {
+  .ControlPanel-main {
+    flex-direction: row;
+    padding-right: 0px;
+    align-self: center;
+    gap: 50px;
+  }
+  .ControlPanel-generator {
+    min-width: 25%;
+    flex: 1;
+  }
+  .ControlPanel-startEndSelector {
+    min-width: 25%;
+    flex: 1;
+  }
+  .ControlPanel-algorithm {
+    min-width: 25%;
+    flex: 1;
+  }
 }

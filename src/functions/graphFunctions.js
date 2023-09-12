@@ -35,18 +35,108 @@ edgemap = hashmap of nodes to array of edge objects:
     '1': [{source: 1, target: 5, level = 0}],
     '2': [{source: 2, target: 3, level = 0},{source: 6, target: 2, level = 0}]
 }
-
+numNodes
 */
+export function createGrid(gridDiameter) {
+    let num_rows = gridDiameter
+    let num_cols = gridDiameter
+    let gridDataset = { nodes: [], edges: [], adjmap: {}, edgemap: {}, type: 'grid' };
+
+    let count = 0
+    for (let r = 0; r < num_rows; r++) {
+        for (let c = 0; c < num_cols; c++) {
+
+            let newNode = { id: count, level: 0, start: false, end: false, path: [], componentColor: -1, nonSpanning: false, parent: -1, type: 'node' };
+
+            let downEdge
+            let rightEdge
+
+            gridDataset.nodes.push(newNode)
+
+            //right
+            if (c < num_cols - 1) {
+                let edgeSource = count
+                let edgeTarget = count + 1
+                rightEdge = { source: edgeSource, target: edgeTarget, id: `${edgeSource}-${edgeTarget}`, level: -1, path: [], componentColor: -1, nonSpanning: false, type: 'edge' };
+
+                if (!(rightEdge.source in gridDataset.adjmap)) {
+                    gridDataset.adjmap[rightEdge.source] = [];
+                }
+                gridDataset.adjmap[rightEdge.source].push(rightEdge.target);
+
+                if (!(rightEdge.target in gridDataset.adjmap)) {
+                    gridDataset.adjmap[rightEdge.target] = [];
+                }
+                gridDataset.adjmap[rightEdge.target].push(rightEdge.source);
+
+                if (!(rightEdge.source in gridDataset.edgemap)) {
+                    gridDataset.edgemap[rightEdge.source] = [];
+                }
+                gridDataset.edgemap[rightEdge.source].push(rightEdge);
+
+                if (!(rightEdge.target in gridDataset.edgemap)) {
+                    gridDataset.edgemap[rightEdge.target] = [];
+                }
+                gridDataset.edgemap[rightEdge.target].push(rightEdge);
+
+                gridDataset.edges.push(rightEdge)
+
+
+            }
+
+            // down
+            if (r < num_rows - 1) {
+                let edgeSource = count
+                let edgeTarget = count + num_cols
+                downEdge = { source: edgeSource, target: edgeTarget, id: `${edgeSource}-${edgeTarget}`, level: -1, path: [], componentColor: -1, nonSpanning: false, type: 'edge' };
+
+                if (!(downEdge.source in gridDataset.adjmap)) {
+                    gridDataset.adjmap[downEdge.source] = [];
+                }
+                gridDataset.adjmap[downEdge.source].push(downEdge.target);
+
+                if (!(downEdge.target in gridDataset.adjmap)) {
+                    gridDataset.adjmap[downEdge.target] = [];
+                }
+                gridDataset.adjmap[downEdge.target].push(downEdge.source);
+
+                if (!(downEdge.source in gridDataset.edgemap)) {
+                    gridDataset.edgemap[downEdge.source] = [];
+                }
+                gridDataset.edgemap[downEdge.source].push(downEdge);
+
+                if (!(downEdge.target in gridDataset.edgemap)) {
+                    gridDataset.edgemap[downEdge.target] = [];
+                }
+                gridDataset.edgemap[downEdge.target].push(downEdge);
+
+                gridDataset.edges.push(downEdge)
+
+            }
+
+
+
+            count++
+        }
+    }
+
+    if (gridDiameter > 1) {
+        initializeGraph(gridDataset)
+    }
+    return gridDataset
+
+
+
+}
 export function createGraph(numNodes, connectAll) {
 
-
     // create empty graph template
-    let newGraph = { nodes: [], edges: [], adjmap: {}, edgemap: {} };
+    let newGraph = { nodes: [], edges: [], adjmap: {}, edgemap: {}, type: 'graph' };
 
     // loop to numNodes, create node objects, create random connections
     for (let i = 0; i < numNodes; i++) {
         // NEW NODE
-        newGraph.nodes.push({ id: i, level: 0, start: false, end: false, path: [], componentColor: -1, nonSpanning: false, parent: -1 });
+        newGraph.nodes.push({ id: i, level: -1, start: false, end: false, path: [], componentColor: -1, nonSpanning: false, parent: -1, type: 'node' });
         if (numNodes > 1) {
             // create and push random connection - every node will have 1 random connection
             let randomTarget = Math.floor(Math.random() * numNodes);
@@ -57,7 +147,7 @@ export function createGraph(numNodes, connectAll) {
             if (thisEdgeExists(newGraph.edgemap, i, randomTarget) == false) {
 
                 // NEW EDGE
-                let edgeObj = { source: i, target: randomTarget, id: `${i}-${randomTarget}`, path: [], componentColor: -1, nonSpanning: false };
+                let edgeObj = { source: i, target: randomTarget, id: `${i}-${randomTarget}`, level: -1, path: [], componentColor: -1, nonSpanning: false, type: 'edge' };
 
                 // Add edge
                 newGraph.edges.push(edgeObj);
@@ -91,53 +181,111 @@ export function createGraph(numNodes, connectAll) {
             connectComponents(newGraph);
         }
 
-        // run bfs from a node and keep track of visited. at every level, attach count to level property.
-        let queue = [];
-        let innerQueue = [];
-        let visited = new Set();
-        let parent = 0;
-        let childrenNodes = [];
-        let childrenEdges = [];
-        let count = 0;
+        initializeGraph(newGraph)
+    }
+    return newGraph;
+}
 
-        for (let node of newGraph.nodes) {
-            if (!visited.has(node.id)) {
-                count = 0;
-                queue.push(node.id);
+export function initializeGraph(newGraph) {
 
+    let visited = new Set();
+    let innerQueue = []
+
+    for (let root of newGraph.nodes) {
+        if (!visited.has(root.id)) {
+
+            let queue = [];
+            let count = 0;
+
+            queue.push(root);
+            visited.add(root.id)
+            root.level = count
+            count++
+            while (queue.length > 0) {
+                //double while loop to get ALL nodes on the same level to synchronize count
                 while (queue.length > 0) {
-                    // pop everyone from queue and put their children on the inner queue
-                    while (queue.length > 0) {
-                        parent = queue.shift();
-                        newGraph.nodes[parent].level = count;
-                        visited.add(parent);
-                        childrenNodes = newGraph.adjmap[parent.toString()];
-                        childrenEdges = newGraph.edgemap[parent.toString()];
+                    let parentNode = queue.shift();
 
-                        // add level to edge
-                        for (let childEdge of childrenEdges) {
-                            if (!Object.hasOwn(childEdge, "level")) {
-                                childEdge.level = count + 1;
-                            }
+                    let connectedEdges = newGraph.edgemap[parentNode.id.toString()]
+                    for (let edge of connectedEdges) {
+
+                        // get child node   
+                        let childNode = newGraph.nodes[edge.source]
+                        if (newGraph.nodes[edge.source].id == parentNode.id) {
+                            childNode = newGraph.nodes[edge.target]
                         }
 
-                        // push children onto inner queue
-                        for (let childNode of childrenNodes) {
-                            if (!visited.has(childNode)) {
-                                innerQueue.push(childNode);
-                            }
+                        // set level on edge
+                        if (!visited.has(edge.id)) {
+                            //set level for edges
+                            visited.add(edge.id)
+                            edge.level = count
                         }
+
+                        // set level for nodes. push onto queue
+                        if (!visited.has(childNode.id)) {
+                            childNode.level = count + 1
+
+                            visited.add(childNode.id)
+                            innerQueue.push(childNode)
+
+                        }
+
                     }
-                    count += 2;
-
-                    queue.push(...innerQueue);
-                    innerQueue = [];
                 }
+                queue.push(...innerQueue)
+                innerQueue = []
+                count += 2
             }
         }
     }
-    console.log(newGraph)
-    return newGraph;
+}
+export function initializeGraph2(newGraph) {
+    // run bfs from a node and keep track of visited. at every level, attach count to level property.
+    let queue = [];
+    let innerQueue = [];
+    let visited = new Set();
+    let parent = 0;
+    let childrenNodes = [];
+    let childrenEdges = [];
+    let count = 0;
+
+    for (let node of newGraph.nodes) {
+        if (!visited.has(node.id)) {
+            count = 0;
+            queue.push(node.id);
+
+            while (queue.length > 0) {
+                // pop everyone from queue and put their children on the inner queue
+                while (queue.length > 0) {
+                    parent = queue.shift();
+                    newGraph.nodes[parent].level = count;
+                    visited.add(parent);
+                    childrenNodes = newGraph.adjmap[parent.toString()];
+                    childrenEdges = newGraph.edgemap[parent.toString()];
+
+                    // add level to edge
+                    for (let childEdge of childrenEdges) {
+                        if (childEdge.level == -1) {
+                            childEdge.level = count + 1;
+                        }
+                    }
+
+                    // push children onto inner queue
+                    for (let childNode of childrenNodes) {
+                        if (!visited.has(childNode)) {
+                            innerQueue.push(childNode);
+                        }
+                    }
+                }
+                count += 2;
+
+                queue.push(...innerQueue);
+                innerQueue = [];
+            }
+        }
+    }
+
 }
 
 //given a unconnected graph structure, connect all components
@@ -266,12 +414,12 @@ export function resetGraph(graphStructure, resetOptions) {
 
 //         // iterate through children 
 //         for (let edge of connectedEdges) {
+//             if (!visitedEdges.has(edge.id)) {
 
 //             // pop this edge into the visited edges map and set its level 
-//             if (!visitedEdges.has(edge.id)) {
+//                 visitedEdges.add(edge.id)
 //                 edge.level = count
 //                 count += 1
-//                 visitedEdges.add(edge.id)
 //             }
 
 //             // get the child node 
@@ -296,7 +444,7 @@ export function resetGraph(graphStructure, resetOptions) {
 
 export function visualizeBFS(graphStructure, start, end) {
     let options = {
-        setLevels: 'increment',
+        setLevels: true,
         setPaths: true,
         findCycleEdges: false,
         start: start,
@@ -309,6 +457,10 @@ export function visualizeBFS(graphStructure, start, end) {
 
 
     let res = breadthFirstSearch(graphStructure, options)
+
+    let result = { endFound: res.endFound, nodesVisited: res.nodesVisited }
+
+    return result
 
 }
 
@@ -323,6 +475,8 @@ export function visualizeDFS(graphStructure, start, end) {
     let visitedEdges = new Set()
 
     let stack = []
+
+    let endFound = false
 
     // push root onto stack
     let root = graphStructure.nodes[start]
@@ -352,7 +506,8 @@ export function visualizeDFS(graphStructure, start, end) {
                 visitedNodes.add(parentNode.id)
                 // if we've reached our target, return 
                 if (parentNode.end == true) {
-                    return
+                    endFound = true
+                    break
                 }
             }
 
@@ -369,9 +524,9 @@ export function visualizeDFS(graphStructure, start, end) {
                 let nextOnStack = [-1, -1]
                 if (!visitedNodes.has(childNode.id)) {
                     nextOnStack[0] = childNode
-                    childNode.path = [...parentNode.path, edge, childNode]
-                }
-                if (!visitedEdges.has(edge.id)) {
+                    if (!visitedEdges.has(edge.id)) {
+                        childNode.path = [...parentNode.path, edge, childNode]
+                    }
                     nextOnStack[1] = edge
                 }
                 if (nextOnStack[0] != -1 || nextOnStack[1] != -1) {
@@ -382,6 +537,9 @@ export function visualizeDFS(graphStructure, start, end) {
         }
 
     }
+    let result = { endFound: endFound, nodesVisited: visitedNodes.size }
+
+    return result
 }
 
 export function visualizeIDC(graphStructure, start) {
@@ -438,9 +596,9 @@ export function visualizeIDC(graphStructure, start) {
                     // if we find a edge or node that we havent visited, push them onto the stack.
                     let nextOnStack = [-1, -1]
                     if (!visitedNodes.has(childNode.id)) {
-                        nextOnStack[0] = childNode
-                    }
-                    if (!visitedEdges.has(edge.id)) {
+                        if (!visitedEdges.has(edge.id)) {
+                            nextOnStack[0] = childNode
+                        }
                         nextOnStack[1] = edge
                     }
                     if (nextOnStack[0] != -1 || nextOnStack[1] != -1) {
@@ -463,21 +621,26 @@ export function visualizeIDC(graphStructure, start) {
         }
     }
 
+    let result = { numSubGraphs: componentNumber, nodesVisited: graphStructure.nodes.length }
+
+    return result
+
 
 }
 
+// why is detecting all cycles so complex!!!
 export function visualizeDAC(graphStructure) {
 
     let visited = new Set()
     let res
-    let allCycleEdges = []
+    let removedEdges = []
 
     for (let root of graphStructure.nodes) {
 
         if (!visited.has(root.id)) {
 
             let options = {
-                setLevels: 'grow',
+                setLevels: true,
                 setPaths: false,
                 findCycleEdges: true,
                 start: root.id,
@@ -494,16 +657,170 @@ export function visualizeDAC(graphStructure) {
             }
 
             res = breadthFirstSearch(graphStructure, options)
-            console.log(res)
-            console.log(res.cycleEdges)
-            allCycleEdges.push(...res.cycleEdges)
+            removedEdges.push(...res.cycleEdges)
         }
     }
-    console.log(allCycleEdges)
 
-    let spanningTree = cloneThisGraph(graphStructure, allCycleEdges)
+    let spanningTree = cloneThisGraph(graphStructure, removedEdges)
+
+    let edgeToSlotMap = {} // map edges to array slots
+    let slotToEdgeMap = [] // map array slots to edges
+    let cycleBitGrid = [] // grid of arrays of bits 
+
+    let cycleBase = [] // array of arrays of actual paths 
+    let edgeCount = 0
+    let overlappingCycles = false
+
+    for (let edge of removedEdges) {
+
+        let source = edge.source
+        let target = edge.target
+
+        let options = {
+            setLevels: false,
+            setPaths: true,
+            findCycleEdges: false,
+            start: source.id,
+            end: target.id,
+            count: 0,
+            visited: new Set(),
+            resetOptions: {
+                resetLevel: false,
+                resetPath: true,
+                resetComponentColor: true,
+                resetIsCycleEdge: false,
+                resetParent: false
+            }
+        }
+
+        res = breadthFirstSearch(spanningTree, options)
+
+        target.path.push(edge, source)
+
+        let edgesInThisCycle = []
+        for (let i = 0; i < edgeCount; i++) {
+            edgesInThisCycle.push(0)
+        }
+
+        for (let edge of target.path) {
+            if (edge.type == 'edge') {
+                // if this edge hasn't appeared before
+                if (!Object.hasOwn(edgeToSlotMap, edge.index.toString())) {
+                    slotToEdgeMap.push(edge)
+                    // add to index map
+                    edgeToSlotMap[edge.index.toString()] = edgeCount
+                    edgeCount++
+                    // push a new 1 onto this edges cycle index array 
+                    edgesInThisCycle.push(1)
+                } else { // if it has appeared before, indicate so - there are some overlapping cycles 
+                    overlappingCycles = true
+                    // get the array index of this edge, and update this cycle's index for that edge to 1
+                    edgesInThisCycle[edgeToSlotMap[edge.index.toString()]] = 1
+                }
+            }
+        }
+        cycleBitGrid.push(edgesInThisCycle)
+        cycleBase.push(target.path)
+    }
 
 
+
+    if (graphStructure.type == 'graph' && overlappingCycles == true) {
+
+
+        // fill out the rest of the array slots in previous cycle arrays
+        for (let cycle of cycleBitGrid) {
+            let currLength = cycle.length
+            let targetLength = edgeCount
+            for (let i = 0; i < targetLength - currLength; i++) {
+                cycle.push(0)
+            }
+        }
+
+
+
+        // logical AND all the cycles in the cycle grid with each other, if overlap is found, save the xor array of the two arrays
+        let complexCycles = []
+
+        for (let i = 0; i < cycleBitGrid.length; i++) {
+
+            let row1 = cycleBitGrid[i]
+
+            for (let j = i + 1; j < cycleBitGrid.length; j++) {
+                let row2 = cycleBitGrid[j]
+
+                let andCheck = false
+                let xorArray = []
+
+                for (let k = 0; k < row1.length; k++) {
+                    let row1slot = row1[k]
+                    let row2slot = row2[k]
+
+                    if (row1slot ^ row2slot == 1) {
+                        xorArray.push(slotToEdgeMap[k])
+                    }
+
+                    if (row1slot & row2slot == 1) {
+                        andCheck = true
+                    }
+
+                }
+                // if we found some overlap, save this new cycle array
+                if (andCheck == true) {
+                    complexCycles.push(xorArray)
+                }
+
+
+            }
+        }
+
+        // we need to put the xorArray in ORDER then we need to add nodes in between 
+        let allNewCycles = []
+
+        for (let xorArray of complexCycles) {
+            let newCycle = []
+
+            let next
+            // iterate through the xorArray and put edges and nodes in ORDER
+            for (let i = 0; i < xorArray.length; i++) {
+                if (i == 0) {
+                    newCycle.push(xorArray[i].source, xorArray[i])
+
+                    next = xorArray[i].target
+                } else {
+                    newCycle.push(next)
+                    for (let j = i; j < xorArray.length; j++) {
+                        if ((next.id == xorArray[j].source.id) || (next.id == xorArray[j].target.id)) {
+                            let temp = xorArray[i]
+                            xorArray[i] = xorArray[j]
+                            xorArray[j] = temp
+
+                            if (next.id == xorArray[i].source.id) {
+                                next = xorArray[i].target
+                            } else {
+                                next = xorArray[i].source
+                            }
+                            break
+
+                        }
+                    }
+                    newCycle.push(xorArray[i])
+                }
+
+
+            }
+
+            newCycle.push(next)
+            allNewCycles.push(newCycle)
+
+        }
+
+        cycleBase.push(...allNewCycles)
+    }
+
+    let result = { cycles: cycleBase, numCycles: cycleBase.length, nodesVisited: graphStructure.nodes.length }
+
+    return result
 
 }
 
@@ -543,12 +860,12 @@ export function visualizeDAC(graphStructure) {
 //                     if (edge.source.id == parentNode.id) {
 //                         childNode = edge.target
 //                     }
+//                     if (!visitedEdges.has(edge.id)) {
 
 //                     //set level for edges
-//                     if (!visitedEdges.has(edge.id)) {
+//                         visitedEdges.add(edge.id)
 //                         edge.level = count
 //                         count++
-//                         visitedEdges.add(edge.id)
 
 //                     }
 
@@ -619,38 +936,51 @@ export function cloneThisGraph(graphStructure, excludeEdges) {
     return cloneGraph
 }
 
-// universal BFS function 
-/*
-options = {
-    setLevels: 'grow', 'increment', 'off'
-    setPaths: boolean 
 
+/*    
+
+Resuable BFS function. 
+-- takes in an option parameter and returns a result object
+
+options = {
+    setLevels: true | false
+    setPaths: true | false 
+    findCycleEdges: true | false 
 
     start: int
     end: int
-    count: 0 
+    count: int
+    visited: set()
 
-    reset: {
-        resetLevels: boolean
-        resetPaths: boolean
-        resetNonSpanning: boolean
-        resetComponentColor: boolean
-        resetParent: boolean
-    } or 'all' or 'none'
+    resetOptions: 'all' | 'none' | 
+    {   resetLevel:           true | false 
+        resetPath:            true | false 
+        resetComponentColor:  true | false 
+        resetIsCycleEdge:     true | false 
+        resetParent:          true | false  
+    }
 }
- nonSpan
+
+returns = {
+    endFound: boolean, 
+    nodesVisited: int, 
+    edgesVisited: int, 
+    cycleEdges: array of edges 
+}
+
 */
 export function breadthFirstSearch(graphStructure, options) {
 
-
-    let setLevels = options.setLevels || 'off'
+    let setLevels = options.setLevels || false
     let setPaths = options.setPaths || false
     let findCycleEdges = options.findCycleEdges || false
-    let start = options.start || 0
-    let end = options.end || -1
     let count = options.count || 0
     let visited = options.visited || new Set()
     let resetOptions = options.resetOptions || 'none'
+    let start = (options.start == undefined ? 0 : options.start)
+    let end = (options.end == undefined ? -1 : options.end)
+
+
 
     let result = { endFound: false, nodesVisited: 0, edgesVisited: 0, cycleEdges: [] }
 
@@ -665,7 +995,7 @@ export function breadthFirstSearch(graphStructure, options) {
     // get root and set level 
     let root = graphStructure.nodes[start]
 
-    if (setLevels == 'increment' || setLevels == 'grow') {
+    if (setLevels == true) {
         root.level = count
         count += 1
     }
@@ -674,6 +1004,7 @@ export function breadthFirstSearch(graphStructure, options) {
     let queue = []
     queue.push(root)
     visited.add(root.id)
+    result.nodesVisited++
     if (setPaths == true) {
         root.path = [root]
     }
@@ -694,27 +1025,21 @@ export function breadthFirstSearch(graphStructure, options) {
             if (edge.source.id == parentNode.id) {
                 childNode = edge.target
             }
-
-            //set level for edges
             if (!visited.has(edge.id)) {
 
-                if (setLevels == 'increment') {
-                    edge.level = count
-                    count++
-                } else if (setLevels == 'grow') {
+                //set level for edges
+
+                if (setLevels == true) {
+                    visited.add(edge.id)
                     edge.level = count
                 }
-                visited.add(edge.id)
                 result.edgesVisited++
 
             }
 
             // set level for nodes. push onto queue
             if (!visited.has(childNode.id)) {
-                if (setLevels == 'increment') {
-                    childNode.level = count
-                    count++
-                } else if (setLevels == 'grow') {
+                if (setLevels == true) {
                     childNode.level = count + 1
                 }
 
@@ -749,13 +1074,12 @@ export function breadthFirstSearch(graphStructure, options) {
                 }
             }
         }
-        if (setLevels == 'grow') {
+        if (setLevels == true) {
             count += 2
         }
 
         if (result.endFound == true) break
     }
-    // console.log(graphStructure)
     return result
 
 

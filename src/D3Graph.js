@@ -1,7 +1,7 @@
 import * as d3 from "d3";
 
 class D3Graph {
-  constructor(element, graphStructure, setClicked) {
+  constructor(element, graphStructure, setClicked, setStats) {
     const vis = this;
 
     vis.height = 1000
@@ -20,6 +20,7 @@ class D3Graph {
     vis.shrinkDuration = 1000
 
     vis.setClicked = setClicked
+    vis.setStats = setStats
 
     let horizontalMultiplier = .1
 
@@ -57,10 +58,10 @@ class D3Graph {
       .attr("style", "overflow: visible")
 
     // speficications for grid graph - try making links smaller
-    // let iterations = 20
-    // let strength = -100
+    // vis.iterations = 20
+    // vis.strength = -100
 
-    // specifications for random graph
+    // // specifications for random graph
     vis.iterations = 30;
     vis.strength = -50;
 
@@ -379,7 +380,8 @@ class D3Graph {
 
   }
 
-  visualize(algorithm) {
+  // multipath is for DAC algorithm to show multiple cycle paths
+  visualize(algorithm, resultObj) {
 
     let vis = this
     let duration = 175
@@ -506,10 +508,54 @@ class D3Graph {
         count += 1
         // After the last transition call this code
         if (count == numVisitedNodes) {
-          vis.applyMouseOptions()
-          if (data.end == true && (algorithm == 'dfs' || algorithm == 'bfs')) {
+          let statArray = []
 
-            vis.animateBestPath(data.path)
+          vis.applyMouseOptions()
+
+          if (algorithm == 'dfs') {
+            statArray.push(`Algorithm: Depth First Search`)
+            statArray.push(`Nodes visited: ${resultObj.nodesVisited}`)
+            if (resultObj.endFound == true) {
+              statArray.push(`End node was found`)
+              statArray.push(`First path from Start to End: ${(data.path.length + 1) / 2} nodes`)
+            } else {
+              statArray.push(`End node was not found.`)
+            }
+            vis.setStats(statArray)
+
+            if (data.end == true) {
+              vis.animateBestPath(data.path)
+            }
+
+          } else if (algorithm == 'bfs') {
+            statArray.push(`Algorithm: Breadth First Search`)
+            statArray.push(`Nodes visited: ${resultObj.nodesVisited}`)
+            if (resultObj.endFound == true) {
+              statArray.push(`End node was found`)
+              statArray.push(`Shortest path from Start to End: ${(data.path.length + 1) / 2} nodes`)
+            } else {
+              statArray.push(`End node was not found.`)
+            }
+            vis.setStats(statArray)
+
+            if (data.end == true) {
+              vis.animateBestPath(data.path)
+            }
+
+          } else if (algorithm == 'idc') {
+            statArray.push(`Algorithm: Identify Subgraphs`)
+            statArray.push(`Nodes visited: ${resultObj.nodesVisited}`)
+            statArray.push(`Number of Subgraphs: ${resultObj.numSubGraphs}`)
+            vis.setStats(statArray)
+          } else if (algorithm == 'dac') {
+            for (let path of resultObj.cycles) {
+              vis.animateBestPath(path)
+            }
+            statArray.push(`Algorithm: Detect All Cycles`)
+            statArray.push(`Nodes visited: ${resultObj.nodesVisited}`)
+            statArray.push(`Cycles detected: ${resultObj.numCycles}`)
+            vis.setStats(statArray)
+
           }
         }
       })
@@ -524,7 +570,6 @@ class D3Graph {
     let vis = this
     let lag = 10
     let duration = 100
-
     vis.linkGroup
       .selectAll('line')
       .each((d, i) => d.level = -1)
@@ -536,7 +581,6 @@ class D3Graph {
     for (let i = 0; i < pathArray.length; i++) {
       pathArray[i].level = i
     }
-
 
     vis.linkGroup
       .selectAll('line')

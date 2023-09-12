@@ -1,14 +1,9 @@
+let one = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9]
 
-let one = {
-    vis: new Set(),
-    three: false
+
+for (let i = 0; i < one.length - 1; i++) {
+    let first = one[i]
+    let second = one[i + 1]
 }
 
-let visited = one.vis
-
-
-
-visited.add('asasas')
-visited.add(3)
-
-console.log(one.vis)
+console.log(res)
