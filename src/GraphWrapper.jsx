@@ -13,7 +13,6 @@ function GraphWrapper({
   setStartClicked,
   endClicked,
   setEndClicked,
-  clearClicked,
   algorithm,
   visualize,
   setStats,
@@ -24,10 +23,11 @@ function GraphWrapper({
   const [graphInstance, setGraphInstance] = useState(false);
   const [clicked, setClicked] = useState(false);
 
-  // when the user clicks the visualize button, trigger this function. visualize is a boolean that gets toggled on and off
+  // when the user clicks the visualize button, trigger this function.
+  // visualize is a boolean that gets toggled on and off
   useEffect(() => {
     if (didMount.current == true) {
-      // find random start
+      // For BFS and DFS select a random start position
       if (algorithm == "dfs" || algorithm == "bfs") {
         if (graphInstance.start == -1) {
           graphInstance.setStart(
@@ -35,6 +35,7 @@ function GraphWrapper({
           );
         }
       }
+      // Handle BFS visualization
       if (algorithm == "bfs") {
         let result = visualizeBFS(
           graph,
@@ -43,6 +44,7 @@ function GraphWrapper({
         );
         graphInstance.visualize("bfs", result);
       } else if (algorithm == "dfs") {
+        // Handle DFS visualization
         let result = visualizeDFS(
           graph,
           graphInstance.start,
@@ -50,10 +52,12 @@ function GraphWrapper({
         );
         graphInstance.visualize("dfs", result);
       } else if (algorithm == "idc") {
+        // Handle components visualization
         graphInstance.clearStartEnd();
         let result = visualizeIDC(graph);
         graphInstance.visualize("idc", result);
       } else if (algorithm == "dac") {
+        // Handle cycles visualization
         graphInstance.clearStartEnd();
         let result = visualizeDAC(graph);
         graphInstance.visualize("dac", result);
@@ -61,8 +65,10 @@ function GraphWrapper({
     }
   }, [visualize]);
 
-  // ON FIRST RENDER CREATE THE CHART OBJECT
+  // On first render create a brand new graph component
+  // pass the setClicked and setStats function so D3 can talk back to react
   useEffect(() => {
+    // check for mounting because we need graph to load in before we call D3Graph
     if (didMount.current == false) {
       didMount.current = true;
     } else {
@@ -76,12 +82,14 @@ function GraphWrapper({
   //Change the color of that node in the graph instance
   useEffect(() => {
     if (clicked != false) {
+      // handle setting of start and end nodes
       if (startClicked == true) {
         graphInstance.setStart(clicked[0]);
       } else if (endClicked == true) {
         graphInstance.setEnd(clicked[0]);
       }
 
+      // handle setting the start and end buttons
       if (startClicked) {
         if (graphInstance.start != -1) {
           if (graphInstance.end == -1) {
@@ -108,14 +116,6 @@ function GraphWrapper({
       }
     }
   }, [clicked]);
-
-  useEffect(() => {
-    if (graphInstance != false) {
-      setEndClicked(false);
-      setStartClicked(false);
-      graphInstance.clearStartEnd();
-    }
-  }, [clearClicked]);
 
   return (
     <>

@@ -100,12 +100,13 @@
   font-weight: 300;
   letter-spacing: 1px;
 }
-.ControlPanel-center {
+.ControlPanel-results {
   text-align: center;
   padding-bottom: 10px;
   position: relative;
+  margin-bottom: 5px;
 }
-.ControlPanel-center:before {
+.ControlPanel-results:before {
   content: "";
   position: absolute;
   left: 0;

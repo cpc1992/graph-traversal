@@ -1,9 +1,8 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import "./ControlPanel.css";
 
 function ControlPanel({
   numNodes,
-  setNumNodes,
   connectAll,
   setConnectAll,
   algorithm,
@@ -12,31 +11,40 @@ function ControlPanel({
   setStartClicked,
   endClicked,
   setEndClicked,
-  clearClicked,
-  setClearClicked,
   setVisualize,
   generatorTab,
   setGeneratorTab,
   gridDiameter,
-  setGridDiameter,
   stats,
 }) {
   const [sliderVal, setSliderVal] = useState(numNodes);
   const [gridSliderVal, setGridSliderVal] = useState(gridDiameter);
+  const [visualizeDisabled, setVisualizeDisabled] = useState(true);
+
+  // save algorithm choice
   const onAlgoChange = (e) => {
     window.localStorage.setItem("localAlgorithm", e.target.value);
     setAlgorithm(e.target.value);
   };
+
+  // save the generator tab
   const handleTabs = (choice) => {
     window.localStorage.setItem("localGeneratorTab", choice);
     setGeneratorTab(choice);
     window.location.reload();
-    console.log(choice);
   };
+
+  useEffect(() => {
+    setTimeout(() => {
+      // if you click visualize before the graph loads, the page will crash.
+      // only allow after 500 ms
+      setVisualizeDisabled(false);
+    }, 500);
+  }, []);
 
   return (
     <div className="ControlPanel-main content">
-      {/* SECTION 1 */}
+      {/* Graph Generator Section */}
 
       <div className="ControlPanel-generator">
         <h2 className="ControlPanel-steptitle">1) Generate a Graph</h2>
@@ -132,7 +140,7 @@ function ControlPanel({
           Redraw
         </a>
       </div>
-      {/* SECTION 2 */}
+      {/* Select start and end section*/}
       <div className="ControlPanel-startEndSelector">
         <h2 className="ControlPanel-steptitle">
           2) Select Start/End & Algorithm
@@ -249,14 +257,17 @@ function ControlPanel({
           </label>
         </div>
       </div>
-      {/* SECTION 3 */}
+      {/* Visualize section */}
       <div className="ControlPanel-algorithm">
         <h2 className="ControlPanel-steptitle">3) Visualize</h2>
 
         <a
+          disabled
           className="ControlPanel-button"
           onClick={() => {
-            setVisualize((prev) => !prev);
+            if (visualizeDisabled == false) {
+              setVisualize((prev) => !prev);
+            }
           }}
         >
           Visualize
@@ -264,7 +275,7 @@ function ControlPanel({
         <div className="ControlPanel-stats">
           {stats.length > 0 ? (
             <>
-              <div className="ControlPanel-smalltext ControlPanel-center">
+              <div className="ControlPanel-smalltext ControlPanel-results">
                 Results:
               </div>
 
