@@ -29,7 +29,6 @@ edgemap = hashmap of nodes to array of edge objects:
     '1': [{source: 1, target: 5, level = 0}],
     '2': [{source: 2, target: 3, level = 0},{source: 6, target: 2, level = 0}]
 }
-numNodes
 */
 
 // create a NxN grid graph
