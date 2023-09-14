@@ -1,11 +1,8 @@
 .ControlPanel-main {
-  /* margin: 50px; */
-  /* background-color: rgba(255, 255, 255, 0.5); */
   border-radius: 10px;
   display: flex;
   flex-direction: column;
   padding-right: 50px;
-  /* max-width: 400px; */
   height: 1000px;
 }
 
@@ -14,25 +11,24 @@
   flex-direction: column;
 
   padding: 10px;
-  /* border: var(--redborder); */
   gap: 20px;
 }
+
 .ControlPanel-startEndSelector {
   display: flex;
   flex-direction: column;
 
   padding: 10px;
-  /* border: var(--redborder); */
   gap: 20px;
 }
+
 .ControlPanel-algorithm {
   display: flex;
   flex-direction: column;
-
   padding: 10px;
-  /* border: var(--redborder); */
   gap: 20px;
 }
+
 .ControlPanel-algochoice {
   display: flex;
   flex-direction: column;
@@ -75,6 +71,7 @@
   display: flex;
   flex-direction: row;
 }
+
 .ControlPanel-tab {
   width: 50%;
 }
@@ -84,28 +81,32 @@
   font-size: 1.5rem;
   letter-spacing: 2px;
 }
+
 .ControlPanel-text-chosen {
   font-size: 1rem;
-  /* font-weight: 300; */
   letter-spacing: 3px;
   font-weight: 300;
-}
-
-.ControlPanel-input {
-  margin-right: 15px;
+  transition: 100ms;
 }
 
 .ControlPanel-smalltext {
   font-size: 1rem;
   font-weight: 300;
   letter-spacing: 1px;
+  transition: 100ms;
 }
+
+.ControlPanel-input {
+  margin-right: 15px;
+}
+
 .ControlPanel-results {
   text-align: center;
   padding-bottom: 10px;
   position: relative;
   margin-bottom: 5px;
 }
+
 .ControlPanel-results:before {
   content: "";
   position: absolute;
@@ -114,9 +115,10 @@
   bottom: 0;
   height: 1px;
   margin: auto;
-  width: 95%; /* or 100px */
+  width: 95%;
   border-bottom: 1px solid var(--textcolor);
 }
+
 .ControlPanel-stats {
   display: flex;
   flex-direction: column;

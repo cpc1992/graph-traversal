@@ -260,7 +260,6 @@ function ControlPanel({
       {/* Visualize section */}
       <div className="ControlPanel-algorithm">
         <h2 className="ControlPanel-steptitle">3) Visualize</h2>
-
         <a
           disabled
           className="ControlPanel-button"
