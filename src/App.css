@@ -54,6 +54,25 @@ body {
   font-family: "Roboto", sans-serif;
 }
 
+.App-nav {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  max-width: 1400px;
+  margin: auto;
+}
+
+.App-logo {
+  height: 50px;
+  fill: rgba(217, 219, 221, 0.6);
+  transition: all var(--transitionspeedfast);
+}
+
+.App-logo:hover {
+  height: 50px;
+  fill: rgba(217, 219, 221, 1);
+}
+
 .App-content {
   margin: auto;
   display: flex;
@@ -90,6 +109,9 @@ body {
 
   .App-content {
     flex-direction: column;
-    /* align-items: center; */
+  }
+
+  .App-nav {
+    max-width: 915px;
   }
 }
