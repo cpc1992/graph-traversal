@@ -2,6 +2,8 @@
 
 This project visualizes different graph algorithms in a fun, dynamic interface. 
 
+Live site: https://graph-traversal-kappa.vercel.app/
+
 ## Description
 
 ### About the Graphs:
