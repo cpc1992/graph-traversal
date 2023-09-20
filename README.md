@@ -6,11 +6,11 @@ This project visualizes different graph algorithms in a fun, dynamic interface.
 
 ### About the Graphs:
 
-Random: This will generate a random graph with a custom number of nodes. The way this is done is it creates N number of nodes then for every node it will create one edges connecting it to a random node. It is guaranteed that the random node selected will not be itself. You can also select that all nodes will be connected meaning this will be a single component graph. 
+Random: This will generate a random, undirected, unweighted, cyclic graph with a custom number of nodes. The way this is done is it creates N number of nodes then for every node it will create one edge connecting it to a random node [0 to N-1]. It is guaranteed that the random node selected will not be itself. You can also select that all nodes will be connected, meaning then entire graph will consist of one single component.
 
 Grid: This will generate a graph in the shape of a grid with a custom grid diameter. Every node in a row is connect to its neighbors vertically and horizontally. The grid graph always produces a single component graph.
 
-### About the algorithms:
+### About the Algorithms:
 
 Depth First Search: An algorithm for traversing a graph that uses a stack to keep track of the next nodes to visit. It begins with a root node and explores as far as possible along one branch before backtracking and exploring another branch. DFS can indicate if there exists a path from start to end, it cannot guarantee the shortest path between start and end.
 
@@ -38,12 +38,3 @@ The data visualization is done with D3js.
 
 Clifford Chan (cpc1992)
 
-
-
-
-Inspiration, code snippets, etc.
-* [awesome-readme](https://github.com/matiassingers/awesome-readme)
-* [PurpleBooth](https://gist.github.com/PurpleBooth/109311bb0361f32d87a2)
-* [dbader](https://github.com/dbader/readme-template)
-* [zenorocha](https://gist.github.com/zenorocha/4526327)
-* [fvcproductions](https://gist.github.com/fvcproductions/1bfc2d4aecb01a834b46)
