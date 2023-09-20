@@ -1,6 +1,6 @@
 # Graph Traversal Visualizer
 
-This project visualizes different graph algorithms in a fun, dynamic interface. 
+This project visualizes different graph algorithms in a fun, dynamic interface. You can drag the nodes around your screen.
 
 Live site: https://graph-traversal-kappa.vercel.app/
 
@@ -33,7 +33,7 @@ https://en.wikipedia.org/wiki/Cycle_basis
 
 ## Technologies
 
-Frontend written in React.
+Frontend written in React.  
 The data visualization is done with D3js.
 
 ## Authors
