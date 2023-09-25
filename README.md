@@ -18,9 +18,9 @@ Depth First Search: An algorithm for traversing a graph that uses a stack to kee
 
 Breadth First Search: An algorithm for traversing a graph that uses a queue to keep track of the next nodes to visit. It begins with a root node and explores all nodes at the current depth level before moving to the next level of nodes. BFS guarantees the shortest path between start and end. 
 
-Component(subgraph) indentification: There are many ways to identify components. The one implemented in this project starts with a root node and uses DFS to identify all nodes directly & indirectly connected to it. When all nodes in that component have been visited, it iterate to the next unvisited node and starts over using that as the root node. 
+Component(subgraph) indentification: There are many ways to identify components. The one implemented in this project starts with a root node and uses DFS to identify all nodes directly & indirectly connected to it. When all nodes in that component have been visited, it iterates to the next unvisited node and starts over using that as the root node. 
 
-Cycle Detection: Detecting all cycles in an undirected graph is complicated. We first use BFS to convert the graph into a spanning tree. A spanning tree is a subgraph of the graph which has the same number nodes but has as few edges a possible so that the number of components remains the same. Then it iterates through each removed edge and finds the shortest path between the nodes connected to the removed edge. This resulting set of subgraphs is called the Cycle Basis. After finding the Cycle Basis, a bit map is created where each bit represents an edge in every cycle in the cycle basis. Any cycles in the cycle basis that have common edges will then have their edges XORed and the resulting cycle is appended to the cycle basis. The resulting set of cycles includes all simple and complex cycles that exist in the graph. 
+Cycle Detection: Detecting all cycles in an undirected graph is complicated. We first use BFS to convert the graph into a spanning tree. A spanning tree is a subgraph of the graph which has the same number nodes but has as few edges a possible so that the number of components remains the same. Then it iterates through each removed edge and uses BFS to find the shortest path between the nodes on either side of the removed edge. This resulting set of subgraphs is called the Cycle Basis. After finding the cycle basis, a bit map is created where each bit represents an edge in every cycle in the cycle basis. Any cycles in the cycle basis that have common edges will then have their edges XORed and the resulting cycle is appended to the cycle basis. The resulting set of cycles includes all simple and complex cycles that exist in the graph. 
 
 You can read more about this at these links:  
 http://dspace.mit.edu/bitstream/handle/1721.1/68106/FTL_R_1982_07.pdf  
@@ -33,7 +33,7 @@ https://en.wikipedia.org/wiki/Cycle_basis
 
 ## Technologies
 
-Frontend written in React.  
+Front-end written in React.  
 The data visualization is done with D3js.
 
 ## Authors
