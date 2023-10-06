@@ -26,7 +26,7 @@ You can read more about this at these links:
 http://dspace.mit.edu/bitstream/handle/1721.1/68106/FTL_R_1982_07.pdf  
 https://en.wikipedia.org/wiki/Cycle_basis
 
-## Usage Notes:
+## Usage Notes
 * Visualizing DFS or BFS will begin at the start node if specified and search for the end node if specified. If no start node is specified, it will choose one at random. If no end node is specified, it will search the entire component.
 * If a traversal path is found, it will animate the path from the start node to the end node.
 * When visualizing Cycle Detection, it will first identify all edges that were removed to form the spanning tree. Then it will animate all cycles found.
