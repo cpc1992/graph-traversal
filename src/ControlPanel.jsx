@@ -78,7 +78,7 @@ function ControlPanel({
             <input
               id="nodeslider"
               type="range"
-              min="1"
+              min="2"
               max="1000"
               value={sliderVal}
               onChange={(e) => {
@@ -118,7 +118,7 @@ function ControlPanel({
             <input
               id="gridslider"
               type="range"
-              min="1"
+              min="2"
               max="25"
               value={gridSliderVal}
               onChange={(e) => {
